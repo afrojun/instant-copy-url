@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Set up Copy Current URL</title>
+    <link rel="stylesheet" href="welcome.css" />
+  </head>
+  <body>
+    <main>
+      <section class="shortcut" aria-label="Keyboard shortcut">
+        <div class="keys" aria-label="Command Shift C">
+          <kbd>⌘</kbd>
+          <kbd>⇧</kbd>
+          <kbd>C</kbd>
+        </div>
+        <p>Copy any tab’s URL without touching the address bar.</p>
+      </section>
+
+      <section class="setup">
+        <p class="status" id="status" data-state="checking" role="status">
+          Checking your shortcut…
+        </p>
+        <h1>Finish setting up your shortcut</h1>
+        <p class="intro">
+          Chrome may leave an extension shortcut unassigned when that key
+          combination is unavailable. Chrome requires you to choose it yourself.
+        </p>
+
+        <ol>
+          <li>Open Chrome’s extension shortcut settings.</li>
+          <li>Find <strong>Copy Current URL</strong> and click the pencil.</li>
+          <li>
+            Press <kbd>⌘</kbd><kbd>⇧</kbd><kbd>C</kbd> and leave it set to
+            <strong>In Chrome</strong>.
+          </li>
+        </ol>
+
+        <button id="open-shortcuts" type="button">Open shortcut settings</button>
+        <p class="fallback" id="fallback" hidden>
+          Chrome could not open the page. Enter
+          <code>chrome://extensions/shortcuts</code> in the address bar.
+        </p>
+        <p class="note">
+          This extension cannot assign or replace shortcuts on your behalf.
+        </p>
+      </section>
+    </main>
+
+    <script src="welcome.js"></script>
+  </body>
+</html>

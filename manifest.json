@@ -1,0 +1,24 @@
+{
+  "manifest_version": 3,
+  "name": "Copy Current URL",
+  "version": "1.4.0",
+  "description": "Copy the active tab's URL with Command+Shift+C.",
+  "minimum_chrome_version": "116",
+  "permissions": ["activeTab", "clipboardWrite", "offscreen", "scripting"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "options_ui": {
+    "page": "welcome.html",
+    "open_in_tab": true
+  },
+  "commands": {
+    "copy-current-url": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+C",
+        "mac": "Command+Shift+C"
+      },
+      "description": "Copy the current tab URL"
+    }
+  }
+}
