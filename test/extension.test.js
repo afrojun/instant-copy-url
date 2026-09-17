@@ -17,6 +17,12 @@ test("manifest grants only the permissions required for active-tab copying", () 
   );
 
   assert.equal(manifest.manifest_version, 3);
+  assert.deepEqual(manifest.icons, {
+    16: "icons/icon-16.png",
+    32: "icons/icon-32.png",
+    48: "icons/icon-48.png",
+    128: "icons/icon-128.png",
+  });
   assert.deepEqual(manifest.permissions, [
     "activeTab",
     "clipboardWrite",

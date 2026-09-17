@@ -2,8 +2,8 @@
   color-scheme: light;
   font-family:
     ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  color: #202124;
-  background: #eef1f5;
+  color: #172033;
+  background: #f7f8fc;
   font-synthesis: none;
 }
 
@@ -27,39 +27,56 @@ main {
   grid-template-columns: minmax(280px, 0.9fr) minmax(360px, 1.1fr);
   overflow: hidden;
   background: #ffffff;
-  border: 1px solid #d9dee7;
-  border-radius: 18px;
-  box-shadow: 0 18px 54px rgb(32 33 36 / 12%);
+  border: 1px solid #dfe3ec;
+  border-radius: 24px;
+  box-shadow: 0 24px 70px rgb(23 32 51 / 11%);
 }
 
 .shortcut {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 32px;
+  gap: 28px;
   padding: 56px;
   color: #ffffff;
-  background: #263246;
+  background: #172033;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.brand img {
+  width: 54px;
+  height: 54px;
 }
 
 .keys {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
+  display: block;
+}
+
+.shortcut-keys {
+  display: grid;
+  gap: 14px;
+  justify-items: start;
 }
 
 .keys kbd {
-  display: grid;
-  min-width: 78px;
-  height: 78px;
+  display: inline-grid;
+  min-width: 190px;
+  height: 88px;
   place-items: center;
-  padding: 0 18px;
-  font: 600 36px/1 ui-sans-serif, -apple-system, BlinkMacSystemFont, sans-serif;
-  color: #202a3a;
+  padding: 0 28px;
+  font: 700 38px/1 ui-sans-serif, -apple-system, BlinkMacSystemFont, sans-serif;
+  color: #172033;
   background: #ffffff;
-  border: 0;
-  border-radius: 13px;
-  box-shadow: 0 5px 0 #bac3d2;
+  border: 1px solid #dfe3ec;
+  border-radius: 16px;
+  box-shadow: 0 6px 0 #9bc5ff;
 }
 
 .shortcut p {
@@ -67,7 +84,13 @@ main {
   margin: 0;
   font-size: 20px;
   line-height: 1.45;
-  color: #dbe3ef;
+  color: #dbe4f5;
+}
+
+.shortcut .alternate {
+  color: #9bc5ff;
+  font-size: 14px;
+  font-weight: 650;
 }
 
 .setup {
@@ -139,7 +162,7 @@ button {
   min-height: 44px;
   padding: 0 18px;
   color: #ffffff;
-  background: #1a73e8;
+  background: #3157f6;
   border: 0;
   border-radius: 8px;
   font: 650 15px/1 ui-sans-serif, -apple-system, BlinkMacSystemFont, sans-serif;
@@ -147,7 +170,7 @@ button {
 }
 
 button:hover {
-  background: #1765cc;
+  background: #2447db;
 }
 
 button:focus-visible {

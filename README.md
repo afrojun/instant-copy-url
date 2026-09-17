@@ -1,7 +1,8 @@
 # Copy Current URL
 
-A local Chrome extension that copies the active tab URL when you press
-`Command+Shift+C` on macOS and confirms the copy with a small in-page toast.
+A Chrome extension that copies the active tab URL when you press
+`Command+Shift+C` on macOS or `Ctrl+Shift+C` elsewhere, then confirms the copy
+with a small in-page toast.
 
 ## Privacy
 
@@ -20,16 +21,25 @@ The extension has:
 3. Select **Load unpacked**.
 4. Choose this directory.
 
-Chrome should assign `Command+Shift+C` automatically. If it does not, open
-the setup page that appears after installation and follow its instructions. You
-can reopen that page later from the extension's **Details** page by selecting
-**Extension options**.
+Chrome should assign the shortcut automatically. If it does not, open the setup
+page that appears after installation and follow its instructions. You can reopen
+that page later from the extension's **Details** page by selecting **Extension
+options**.
 
 ## Test
 
 ```sh
 node --test
 ```
+
+## Package
+
+```sh
+./scripts/package.sh
+```
+
+The Chrome Web Store upload is written to `dist/`. Store listing copy and
+submission notes are in [`STORE_LISTING.md`](STORE_LISTING.md).
 
 ## Permissions
 
