@@ -1,6 +1,6 @@
-# Copy Current URL
+# Instant Copy URL
 
-A Chrome extension that copies the active tab URL when you press
+A Chrome extension that instantly copies the active tab URL when you press
 `Command+Shift+C` on macOS or `Ctrl+Shift+C` elsewhere, then confirms the copy
 with a small in-page toast.
 

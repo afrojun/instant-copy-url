@@ -2,10 +2,9 @@
 
 ## Store listing
 
-**Name:** Copy Current URL
+**Name:** Instant Copy URL
 
-**Summary:** Copy the current tab's URL with a keyboard shortcut and get a clear
-on-page confirmation.
+**Summary:** Copy the current tab's URL instantly with one keyboard shortcut.
 
 **Category:** Productivity
 
@@ -13,23 +12,20 @@ on-page confirmation.
 
 **Detailed description:**
 
-Copy Current URL gives you a fast, keyboard-first way to copy the address of
-the page you are viewing.
+Choose Command+Shift+C on macOS or Ctrl+Shift+C on Windows and Linux during the
+one-time setup. Once assigned, the shortcut skips the address bar and shows a
+clear confirmation when the URL is ready to paste.
 
-- Press Command+Shift+C on macOS or Ctrl+Shift+C on other platforms.
-- Get a clear confirmation without leaving the page.
-- Reassign the shortcut from Chrome's extension shortcut settings.
-- Keep your browsing private: URLs never leave your device.
+Everything happens on your device. The extension never stores or sends URLs
+and has no analytics, ads, tracking, accounts, remote code, or network access.
+Its source code is available under the MIT License.
 
-The extension has no analytics, advertising, tracking, accounts, or network
-access. It is open source under the MIT License.
+**Website:** https://github.com/afrojun/instant-copy-url
 
-**Website:** https://github.com/afrojun/copy-current-url
-
-**Support:** https://github.com/afrojun/copy-current-url/issues
+**Support:** https://github.com/afrojun/instant-copy-url/issues
 
 **Privacy policy:**
-https://github.com/afrojun/copy-current-url/blob/main/PRIVACY.md
+https://github.com/afrojun/instant-copy-url/blob/main/PRIVACY.md
 
 ## Privacy
 
@@ -80,5 +76,7 @@ URL is still copied there, but the confirmation message cannot be shown.
 ## Assets
 
 - Store icon: `icons/icon-128.png`
-- Screenshot: `store-assets/setup.png`
+- Lead screenshot: `store-assets/url-copied.png`
+- Setup screenshot: `store-assets/setup.png`
 - Small promo tile: `store-assets/small-promo.png`
+- Marquee promo tile: `store-assets/marquee-promo.png`

@@ -2,8 +2,8 @@
 set -eu
 
 root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
-version=$(cd "$root" && node -p "require('./manifest.json').version")
-archive="$root/dist/copy-current-url-$version.zip"
+version=$(awk -F'"' '/"version"/ { print $4; exit }' "$root/manifest.json")
+archive="$root/dist/instant-copy-url-$version.zip"
 
 mkdir -p "$root/dist"
 cd "$root"

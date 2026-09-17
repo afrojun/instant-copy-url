@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Copy Current URL",
-  "version": "1.4.0",
-  "description": "Copy the active tab's URL with a keyboard shortcut.",
+  "name": "Instant Copy URL",
+  "version": "1.5.0",
+  "description": "Copy the current tab's URL instantly with one keyboard shortcut.",
   "minimum_chrome_version": "116",
   "icons": {
     "16": "icons/icon-16.png",

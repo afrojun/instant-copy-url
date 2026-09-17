@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 560">
+  <rect width="1400" height="560" fill="#172033"/>
+  <rect width="22" height="560" fill="#3157f6"/>
+
+  <g transform="translate(76 54) scale(.72)">
+    <rect x="18" y="18" width="76" height="76" rx="19" fill="#0b1020"/>
+    <rect x="26" y="27" width="60" height="51" rx="11" fill="#fff"/>
+    <rect x="34" y="34" width="76" height="76" rx="19" fill="#3157f6"/>
+    <circle cx="53" cy="55" r="6" fill="#fff"/>
+    <rect x="48" y="72" width="48" height="14" rx="7" fill="#fff"/>
+  </g>
+
+  <text x="174" y="101" fill="#fff" font-family="Avenir Next, Arial, sans-serif" font-size="27" font-weight="700">Instant Copy URL</text>
+  <text x="76" y="225" fill="#fff" font-family="Avenir Next, Arial, sans-serif" font-size="62" font-weight="700">Straight to your</text>
+  <text x="76" y="294" fill="#fff" font-family="Avenir Next, Arial, sans-serif" font-size="62" font-weight="700">clipboard.</text>
+  <text x="79" y="359" fill="#b8c6e3" font-family="Avenir Next, Arial, sans-serif" font-size="23">One shortcut skips the address bar.</text>
+
+  <g transform="translate(738 177)" font-family="Avenir Next, Arial, sans-serif" font-weight="700" text-anchor="middle">
+    <rect width="98" height="98" rx="20" fill="#fff" stroke="#9bc5ff" stroke-width="3"/>
+    <text x="49" y="65" fill="#172033" font-size="41">⌘</text>
+    <rect x="118" width="98" height="98" rx="20" fill="#fff" stroke="#9bc5ff" stroke-width="3"/>
+    <text x="167" y="65" fill="#172033" font-size="41">⇧</text>
+    <rect x="236" width="98" height="98" rx="20" fill="#fff" stroke="#9bc5ff" stroke-width="3"/>
+    <text x="285" y="65" fill="#172033" font-size="41">C</text>
+  </g>
+
+  <path d="M1096 226h44" fill="none" stroke="#9bc5ff" stroke-linecap="round" stroke-width="5"/>
+  <path d="m1128 213 13 13-13 13" fill="none" stroke="#9bc5ff" stroke-linecap="round" stroke-linejoin="round" stroke-width="5"/>
+
+  <g transform="translate(1158 190)">
+    <rect width="210" height="72" rx="18" fill="#3157f6"/>
+    <circle cx="36" cy="36" r="14" fill="#fff"/>
+    <path d="m29 36 5 5 9-11" fill="none" stroke="#3157f6" stroke-linecap="round" stroke-linejoin="round" stroke-width="4"/>
+    <text x="65" y="45" fill="#fff" font-family="Avenir Next, Arial, sans-serif" font-size="23" font-weight="700">URL copied</text>
+  </g>
+
+  <text x="905" y="318" fill="#b8c6e3" font-family="Avenir Next, Arial, sans-serif" font-size="18" text-anchor="middle">Ctrl+Shift+C on Windows and Linux</text>
+</svg>

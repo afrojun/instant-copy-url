@@ -2,13 +2,16 @@
 
 Effective date: 17 September 2026
 
-Copy Current URL accesses the URL of the active tab only when you invoke its
+Instant Copy URL accesses the URL of the active tab only when you invoke its
 keyboard shortcut. It processes that URL on your device to copy it to your
 clipboard and show a confirmation message.
 
 The extension does not collect, store, transmit, sell, or share URLs or any
 other user data. It has no analytics, advertising, tracking, accounts, remote
 code, or network communication.
+
+Use of information received from Google APIs will adhere to the Chrome Web
+Store User Data Policy, including the Limited Use requirements.
 
 ## Permissions
 
@@ -25,5 +28,5 @@ date.
 
 ## Contact
 
-For privacy questions, open an issue in the
-[project repository](https://github.com/afrojun/copy-current-url/issues).
+For privacy questions, email
+[extensions@afrojun.dev](mailto:extensions@afrojun.dev).

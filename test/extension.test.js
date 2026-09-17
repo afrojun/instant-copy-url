@@ -17,6 +17,11 @@ test("manifest grants only the permissions required for active-tab copying", () 
   );
 
   assert.equal(manifest.manifest_version, 3);
+  assert.equal(manifest.name, "Instant Copy URL");
+  assert.equal(
+    manifest.description,
+    "Copy the current tab's URL instantly with one keyboard shortcut.",
+  );
   assert.deepEqual(manifest.icons, {
     16: "icons/icon-16.png",
     32: "icons/icon-32.png",
