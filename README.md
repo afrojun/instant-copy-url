@@ -53,11 +53,13 @@ development copy:
 4. Choose `dist/instant-copy-url-dev` from the command output.
 
 Chrome lists this copy as **Instant Copy URL Dev**. Its fixed folder keeps its
-extension ID stable across rebuilds. It does not claim the production copy
-shortcut; assign a separate shortcut under `chrome://extensions/shortcuts` if
-you want to test copying. The optional ProfileBar connection uses a separate
-development native host. Give the dev extension ID shown by Chrome to
-`PROFILEBAR_DEV_EXTENSION_ID` when launching ProfileBar Dev.
+extension ID stable across rebuilds. After rebuilding, select **Reload** for
+Instant Copy URL Dev in `chrome://extensions` to pick up new code and icons.
+The dev copy does not claim the production copy shortcut; assign a separate
+shortcut under `chrome://extensions/shortcuts` if you want to test copying.
+The optional ProfileBar connection uses a separate development native host.
+Give the dev extension ID shown by Chrome to `PROFILEBAR_DEV_EXTENSION_ID`
+when launching ProfileBar Dev.
 
 The published extension suggests its copy shortcut automatically. If Chrome
 does not assign it, open the setup page that appears after installation and
