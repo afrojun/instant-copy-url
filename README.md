@@ -4,27 +4,54 @@ A Chrome extension that instantly copies the active tab URL when you press
 `Command+Shift+C` on macOS or `Ctrl+Shift+C` elsewhere, then confirms the copy
 with a small in-page toast.
 
+With [ProfileBar](https://github.com/afrojun/profilebar) installed on macOS,
+right-click a page or tab and choose **Open tab in profile** to open its URL in
+another Chrome profile. Choose **Enable ProfileBar integration…** the first
+time; Chrome then asks for the optional native messaging permission. The copy
+shortcut works without ProfileBar or that permission.
+
 ## Privacy
 
 The extension has:
 
 - No host permissions.
-- No network access.
+- No network access from the extension.
 - No storage or analytics.
-- Temporary access to the active tab only after you invoke the shortcut.
-- No access to other tabs or previously visited pages.
+- Access to the current URL after you invoke the shortcut or choose a profile
+  from the right-click menu.
+- No access to previously visited pages.
+
+When you choose a profile, the extension sends that URL and the selected profile
+directory to ProfileBar through Chrome's local native messaging channel.
+ProfileBar passes them to Chrome to open the page. The URL is not stored by
+either component. Chrome 150 and later show the menu on tabs as well as pages;
+older supported versions show it on pages.
 
 ## Install
+
+For the published extension, use the Chrome Web Store. For a separate local
+development copy:
+
+```sh
+./scripts/build-dev.py
+```
 
 1. Open `chrome://extensions` in Chrome.
 2. Enable **Developer mode**.
 3. Select **Load unpacked**.
-4. Choose this directory.
+4. Choose `dist/instant-copy-url-dev` from the command output.
 
-Chrome should assign the shortcut automatically. If it does not, open the setup
-page that appears after installation and follow its instructions. You can reopen
-that page later from the extension's **Details** page by selecting **Extension
-options**.
+Chrome lists this copy as **Instant Copy URL Dev**. Its fixed folder keeps its
+extension ID stable across rebuilds. It does not claim the production copy
+shortcut; assign a separate shortcut under `chrome://extensions/shortcuts` if
+you want to test copying. The optional ProfileBar connection uses a separate
+development native host. Give the dev extension ID shown by Chrome to
+`PROFILEBAR_DEV_EXTENSION_ID` when launching ProfileBar Dev.
+
+The published extension suggests its copy shortcut automatically. If Chrome
+does not assign it, open the setup page that appears after installation and
+follow its instructions. You can reopen that page later from the extension's
+**Details** page by selecting **Extension options**.
 
 ## Test
 
@@ -64,3 +91,6 @@ Before the first tagged release, complete the one-time setup in
   Manifest V3 background service worker.
 - `scripting`: show the local confirmation toast on the active page after a
   successful copy.
+- `contextMenus`: add the right-click profile menu.
+- Optional `nativeMessaging`: send a selected page URL and profile directory
+  to ProfileBar on this Mac. Chrome asks only if you enable the integration.

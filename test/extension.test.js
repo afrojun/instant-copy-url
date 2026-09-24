@@ -11,7 +11,7 @@ function runScript(file, context) {
   vm.runInNewContext(source, context);
 }
 
-test("manifest grants only the permissions required for active-tab copying", () => {
+test("manifest keeps native messaging optional while adding profile menus", () => {
   const manifest = JSON.parse(
     fs.readFileSync(path.join(root, "manifest.json"), "utf8"),
   );
@@ -20,7 +20,7 @@ test("manifest grants only the permissions required for active-tab copying", () 
   assert.equal(manifest.name, "Instant Copy URL");
   assert.equal(
     manifest.description,
-    "Copy the current tab's URL instantly with one keyboard shortcut.",
+    "Copy a tab URL with a shortcut, or open it in another Chrome profile.",
   );
   assert.deepEqual(manifest.icons, {
     16: "icons/icon-16.png",
@@ -33,7 +33,9 @@ test("manifest grants only the permissions required for active-tab copying", () 
     "clipboardWrite",
     "offscreen",
     "scripting",
+    "contextMenus",
   ]);
+  assert.deepEqual(manifest.optional_permissions, ["nativeMessaging"]);
   assert.equal(
     manifest.commands["copy-current-url"].suggested_key.mac,
     "Command+Shift+C",
@@ -102,7 +104,7 @@ test("the background opens setup on install and copies the active tab URL", asyn
     },
   };
 
-  runScript("background.js", { chrome, console });
+  runScript("background.js", { chrome, console, importScripts() {} });
 
   installListener({ reason: "update" });
   assert.equal(optionsPageOpens, 0);
