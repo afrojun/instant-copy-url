@@ -32,6 +32,9 @@ options**.
 node --test
 ```
 
+Before a release, also follow the live browser and package checks in
+[`docs/testing.md`](docs/testing.md).
+
 ## Package
 
 ```sh
