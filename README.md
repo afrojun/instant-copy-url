@@ -44,6 +44,18 @@ Before a release, also follow the live browser and package checks in
 The Chrome Web Store upload is written to `dist/`. Store listing copy and
 submission notes are in [`STORE_LISTING.md`](STORE_LISTING.md).
 
+## Release
+
+The [release workflow](.github/workflows/release.yml) runs the Node checks and
+package check on pull requests and pushes to `main`. Pushing a tag matching the
+manifest version (for example, `v1.5.1` for version `1.5.1`) also uploads that
+package to the Chrome Web Store and submits it for automatic publication after
+review. It does not update store listing text or images.
+
+Before the first tagged release, complete the one-time setup in
+[`docs/releasing.md`](docs/releasing.md). Do not tag the already published
+`1.5.0` version: the Web Store requires a higher version for an update.
+
 ## Permissions
 
 - `activeTab`: read the current tab URL only after the keyboard command.

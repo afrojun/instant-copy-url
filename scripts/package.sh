@@ -8,7 +8,7 @@ archive="$root/dist/instant-copy-url-$version.zip"
 mkdir -p "$root/dist"
 cd "$root"
 
-zip -FS "$archive" \
+zip -q -FS "$archive" \
   LICENSE \
   background.js \
   icons/icon-16.png \
