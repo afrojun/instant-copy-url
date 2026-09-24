@@ -20,7 +20,7 @@ test("manifest keeps native messaging optional while adding profile menus", () =
   assert.equal(manifest.name, "Instant Copy URL");
   assert.equal(
     manifest.description,
-    "Copy a tab URL with a shortcut, or open it in another Chrome profile.",
+    "Copy a tab URL with a shortcut, or move it to another Chrome profile.",
   );
   assert.deepEqual(manifest.icons, {
     16: "icons/icon-16.png",

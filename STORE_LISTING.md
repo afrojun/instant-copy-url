@@ -4,7 +4,7 @@
 
 **Name:** Instant Copy URL
 
-**Summary:** Copy a tab URL with a shortcut, or open it in another Chrome profile.
+**Summary:** Copy a tab URL with a shortcut, or move it to another Chrome profile.
 
 **Category:** Productivity
 
@@ -16,8 +16,9 @@ Choose Command+Shift+C on macOS or Ctrl+Shift+C on Windows and Linux during the
 one-time setup. Once assigned, the shortcut skips the address bar and shows a
 clear confirmation when the URL is ready to paste.
 
-On macOS, install ProfileBar to open a page in another Chrome profile from its
-right-click menu. The native messaging permission is optional and requested
+On macOS, install ProfileBar to move a page URL to another Chrome profile from
+its right-click menu. The original tab closes after the URL is opened there.
+The native messaging permission is optional and requested
 only when you enable this feature. The copy shortcut still works on its own.
 
 Everything happens on your device. For a selected profile action, the URL is
@@ -36,7 +37,7 @@ https://github.com/afrojun/instant-copy-url/blob/main/PRIVACY.md
 ## Privacy
 
 **Single purpose:** Let the user act on the current tab URL: copy it to the
-clipboard or open it in a chosen Chrome profile.
+clipboard or move it to a chosen Chrome profile.
 
 **Permission justifications:**
 
@@ -79,6 +80,10 @@ categories.
 4. Invoke the shortcut.
 5. Confirm that the active tab URL is on the clipboard and that the blue
    “URL copied” message appears at the top left of the page.
+6. On macOS with ProfileBar installed, enable its optional integration. Right-click
+   an HTTP page or tab, choose **Move tab to profile**, and select another
+   profile. Confirm the page opens there and the original tab closes. If the
+   helper cannot open it, confirm the original tab stays open.
 
 Chrome does not allow scripts on protected pages such as `chrome://` pages. The
 URL is still copied there, but the confirmation message cannot be shown.

@@ -5,8 +5,9 @@ A Chrome extension that instantly copies the active tab URL when you press
 with a small in-page toast.
 
 With [ProfileBar](https://github.com/afrojun/profilebar) installed on macOS,
-right-click a page or tab and choose **Open tab in profile** to open its URL in
-another Chrome profile. Choose **Enable ProfileBar integration…** the first
+right-click a page or tab and choose **Move tab to profile** to open its URL in
+another Chrome profile and close the original tab after ProfileBar reports
+success. Choose **Enable ProfileBar integration…** the first
 time; Chrome then asks for the optional native messaging permission. The copy
 shortcut works without ProfileBar or that permission.
 
@@ -26,6 +27,11 @@ directory to ProfileBar through Chrome's local native messaging channel.
 ProfileBar passes them to Chrome to open the page. The URL is not stored by
 either component. Chrome 150 and later show the menu on tabs as well as pages;
 older supported versions show it on pages.
+
+This moves the URL, not the tab's browsing history, form contents, scroll
+position, pinned state, or group membership. If ProfileBar cannot open the URL,
+the original tab stays open. If the original tab changes during the handoff,
+the extension leaves it open and explains what happened.
 
 ## Install
 

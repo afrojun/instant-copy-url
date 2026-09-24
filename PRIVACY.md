@@ -3,14 +3,15 @@
 Effective date: 24 September 2026
 
 Instant Copy URL accesses a URL when you invoke its keyboard shortcut or choose
-**Open tab in profile** from the right-click menu. The shortcut copies the URL
+**Move tab to profile** from the right-click menu. The shortcut copies the URL
 to your clipboard and shows a confirmation message.
 
 If you enable the optional ProfileBar integration, the extension reads the
 Chrome profile list from ProfileBar through Chrome's local native messaging
 channel. When you select a profile, it sends that URL and the selected profile
 directory to ProfileBar on the same device. ProfileBar asks Chrome to open the
-URL in that profile. Neither component stores the URL. The extension makes no
+URL in that profile, then closes the original tab when the handoff succeeds.
+Neither component stores the URL. The extension makes no
 network requests and has no analytics, advertising, tracking, accounts, or
 remote code. Chrome may load the selected URL in the destination profile.
 

@@ -2,7 +2,7 @@ const STORE_EXTENSION_ID = "dhalfjnfoocnfpppmkpidbliccemicno";
 const NATIVE_HOST = chrome.runtime.id === STORE_EXTENSION_ID
   ? "dev.afrojun.profilebar"
   : "dev.afrojun.profilebar.dev";
-const MENU_ROOT = "open-in-profile";
+const MENU_ROOT = "move-to-profile";
 const MENU_ENABLE = "enable-profilebar";
 const MENU_SETUP = "setup-profilebar";
 const MENU_REFRESH = "refresh-profiles";
@@ -40,7 +40,7 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
     return;
   }
   if (typeof info.menuItemId === "string" && info.menuItemId.startsWith(PROFILE_PREFIX)) {
-    void openInProfile(info, tab);
+    void moveToProfile(info, tab);
   }
 });
 
@@ -73,7 +73,7 @@ async function buildProfileMenu() {
   }
 
   await removeMenus();
-  await createMenu({ id: MENU_ROOT, title: "Open tab in profile", contexts });
+  await createMenu({ id: MENU_ROOT, title: "Move tab to profile", contexts });
   if (state === "unsupported") {
     await createMenu({ id: "mac-only", parentId: MENU_ROOT, title: "ProfileBar requires macOS", enabled: false, contexts });
   } else if (state === "enable") {
@@ -94,6 +94,8 @@ async function buildProfileMenu() {
     }
     if (profiles.length === 0) {
       await createMenu({ id: "no-profiles", parentId: MENU_ROOT, title: "No Chrome profiles found", enabled: false, contexts });
+    } else {
+      await createMenu({ id: "profiles-refresh-divider", parentId: MENU_ROOT, type: "separator", contexts });
     }
   }
   if (state !== "unsupported") {
@@ -119,31 +121,54 @@ function createMenu(properties) {
   });
 }
 
-async function openInProfile(info, tab) {
+async function moveToProfile(info, tab) {
+  if (!Number.isInteger(tab?.id)) {
+    await showProfileError("source-unavailable");
+    return;
+  }
+
   const url = info.pageUrl ?? tab?.url;
   if (!url || !/^https?:\/\//i.test(url)) {
     await showProfileError("unsupported-url");
     return;
   }
 
+  let response;
   try {
     const directory = decodeURIComponent(info.menuItemId.slice(PROFILE_PREFIX.length));
-    const response = await chrome.runtime.sendNativeMessage(NATIVE_HOST, {
+    response = await chrome.runtime.sendNativeMessage(NATIVE_HOST, {
       type: "openURL",
       profileDirectory: directory,
       url,
     });
-    if (response?.ok) return;
-    if (response?.error === "profile_not_found") {
-      void refreshProfileMenu();
-      await showProfileError("profile-changed");
-    } else {
-      await showProfileError("open-failed");
-    }
   } catch (error) {
     console.debug("ProfileBar could not open the tab:", error);
     void refreshProfileMenu();
     await showProfileError("profilebar-unavailable");
+    return;
+  }
+
+  if (response?.ok) {
+    await closeSourceTab(tab.id, url);
+  } else if (response?.error === "profile_not_found") {
+    void refreshProfileMenu();
+    await showProfileError("profile-changed");
+  } else {
+    await showProfileError("open-failed");
+  }
+}
+
+async function closeSourceTab(tabId, url) {
+  try {
+    const source = await chrome.tabs.get(tabId);
+    if (source.url !== url || source.pendingUrl) {
+      await showProfileError("source-changed");
+      return;
+    }
+    await chrome.tabs.remove(tabId);
+  } catch (error) {
+    console.error("Could not close the original tab:", error);
+    await showProfileError("close-failed");
   }
 }
 

@@ -12,8 +12,13 @@ function menuHarness({ granted = false, hostResponse = { ok: true, profiles: [] 
   const menus = [];
   const nativeMessages = [];
   const openedTabs = [];
+  const removedTabs = [];
+  const errors = [];
+  const tabs = new Map();
   let hasPermission = granted;
   let nativeError;
+  let closeError;
+  let openGate;
   const chrome = {
     runtime: {
       id: storeID,
@@ -24,6 +29,7 @@ function menuHarness({ granted = false, hostResponse = { ok: true, profiles: [] 
       async sendNativeMessage(host, message) {
         nativeMessages.push({ host, message });
         if (nativeError) throw nativeError;
+        if (message.type === "openURL" && openGate) await openGate;
         return hostResponse;
       },
     },
@@ -40,17 +46,31 @@ function menuHarness({ granted = false, hostResponse = { ok: true, profiles: [] 
     },
     tabs: {
       async create(tab) { openedTabs.push(tab); },
+      async get(id) {
+        if (!tabs.has(id)) throw new Error("Tab not found");
+        return tabs.get(id);
+      },
+      async remove(id) {
+        if (closeError) throw closeError;
+        removedTabs.push(id);
+        tabs.delete(id);
+      },
     },
   };
-  const context = vm.createContext({ chrome, console: { debug() {}, error: console.error } });
+  const context = vm.createContext({ chrome, console: { debug() {}, error(...args) { errors.push(args); } } });
   vm.runInContext(source, context);
   return {
     listeners,
     menus,
     nativeMessages,
     openedTabs,
+    removedTabs,
+    errors,
     refresh: () => vm.runInContext("refreshProfileMenu()", context),
     setNativeError(error) { nativeError = error; },
+    setCloseError(error) { closeError = error; },
+    setOpenGate(gate) { openGate = gate; },
+    setTab(tab) { tabs.set(tab.id, tab); },
   };
 }
 
@@ -59,7 +79,7 @@ test("profile menu starts with optional enablement and keeps a page fallback", a
   await harness.refresh();
 
   assert.deepEqual(harness.menus.map((item) => item.id), [
-    "open-in-profile", "enable-profilebar", "refresh-profiles",
+    "move-to-profile", "enable-profilebar", "refresh-profiles",
   ]);
   assert.equal(harness.menus[0].contexts.join(","), "page");
   assert.equal(harness.nativeMessages.length, 0);
@@ -73,7 +93,7 @@ test("non-macOS users see availability without a permission request", async () =
   assert.equal(harness.nativeMessages.length, 0);
 });
 
-test("enabling integration lists profiles and opens the clicked tab in the selected profile", async () => {
+test("a successful handoff closes the clicked tab after opening it in the selected profile", async () => {
   const harness = menuHarness({
     hostResponse: { ok: true, profiles: [
       { directory: "Default", name: "Work" },
@@ -88,10 +108,13 @@ test("enabling integration lists profiles and opens the clicked tab in the selec
   const profiles = harness.menus.filter((item) => item.id.startsWith("profile:"));
   assert.deepEqual(profiles.map((item) => item.title), ["Work (Default)", "Work (Profile 2)"]);
   assert.equal(harness.menus[0].contexts.join(","), "page,tab");
+  assert.deepEqual(harness.menus.slice(-2).map((item) => item.id), ["profiles-refresh-divider", "refresh-profiles"]);
+  assert.equal(harness.menus.at(-2).type, "separator");
 
+  harness.setTab({ id: 42, url: "https://example.com/from-tab" });
   harness.listeners.clicked(
     { menuItemId: "profile:Profile%202", pageUrl: "https://example.com/from-tab" },
-    { url: "https://example.com/other" },
+    { id: 42, url: "https://example.com/from-tab" },
   );
   await new Promise(setImmediate);
   assert.equal(harness.nativeMessages.at(-1).host, "dev.afrojun.profilebar");
@@ -99,19 +122,86 @@ test("enabling integration lists profiles and opens the clicked tab in the selec
   assert.equal(harness.nativeMessages.at(-1).message.profileDirectory, "Profile 2");
   assert.equal(harness.nativeMessages.at(-1).message.url, "https://example.com/from-tab");
   assert.equal(harness.openedTabs.length, 0);
+  assert.deepEqual(harness.removedTabs, [42]);
 });
 
-test("missing helper and unsupported pages fail without opening another profile", async () => {
+test("the source tab stays open until ProfileBar confirms the handoff", async () => {
+  const harness = menuHarness({ granted: true });
+  let confirmOpen;
+  harness.setOpenGate(new Promise((resolve) => { confirmOpen = resolve; }));
+  harness.setTab({ id: 42, url: "https://example.com/" });
+  harness.listeners.clicked(
+    { menuItemId: "profile:Default", pageUrl: "https://example.com/" },
+    { id: 42, url: "https://example.com/" },
+  );
+  await new Promise(setImmediate);
+  assert.deepEqual(harness.removedTabs, []);
+  confirmOpen();
+  await new Promise(setImmediate);
+  assert.deepEqual(harness.removedTabs, [42]);
+});
+
+test("missing helper and unsupported pages leave the source tab in place", async () => {
   const harness = menuHarness({ granted: true });
   harness.setNativeError(new Error("Specified native messaging host not found"));
   await harness.refresh();
   assert.ok(harness.menus.some((item) => item.id === "setup-profilebar"));
 
-  harness.listeners.clicked({ menuItemId: "profile:Default", pageUrl: "chrome://settings" });
+  harness.setTab({ id: 42, url: "chrome://settings" });
+  harness.listeners.clicked({ menuItemId: "profile:Default", pageUrl: "chrome://settings" }, { id: 42 });
   await new Promise(setImmediate);
   assert.equal(harness.openedTabs.length, 1);
   assert.match(harness.openedTabs[0].url, /unsupported-url$/);
   assert.equal(harness.nativeMessages.length, 1);
+  assert.deepEqual(harness.removedTabs, []);
+});
+
+test("a changed source tab remains open after the destination opens", async () => {
+  const harness = menuHarness({ granted: true });
+  harness.setTab({ id: 42, url: "https://example.com/next" });
+  harness.listeners.clicked(
+    { menuItemId: "profile:Default", pageUrl: "https://example.com/original" },
+    { id: 42, url: "https://example.com/original" },
+  );
+  await new Promise(setImmediate);
+  assert.deepEqual(harness.removedTabs, []);
+  assert.match(harness.openedTabs[0].url, /source-changed$/);
+});
+
+test("an unidentified source tab is not opened elsewhere", async () => {
+  const harness = menuHarness({ granted: true });
+  harness.listeners.clicked({ menuItemId: "profile:Default", pageUrl: "https://example.com/" });
+  await new Promise(setImmediate);
+  assert.deepEqual(harness.removedTabs, []);
+  assert.equal(harness.nativeMessages.length, 0);
+  assert.match(harness.openedTabs[0].url, /source-unavailable$/);
+});
+
+test("a failed handoff leaves the source tab in place", async () => {
+  const harness = menuHarness({ granted: true });
+  harness.setNativeError(new Error("ProfileBar unavailable"));
+  harness.setTab({ id: 42, url: "https://example.com/" });
+  harness.listeners.clicked(
+    { menuItemId: "profile:Default", pageUrl: "https://example.com/" },
+    { id: 42, url: "https://example.com/" },
+  );
+  await new Promise(setImmediate);
+  assert.deepEqual(harness.removedTabs, []);
+  assert.match(harness.openedTabs[0].url, /profilebar-unavailable$/);
+});
+
+test("a close failure reports that the destination opened and source remains", async () => {
+  const harness = menuHarness({ granted: true });
+  harness.setCloseError(new Error("Could not close tab"));
+  harness.setTab({ id: 42, url: "https://example.com/" });
+  harness.listeners.clicked(
+    { menuItemId: "profile:Default", pageUrl: "https://example.com/" },
+    { id: 42, url: "https://example.com/" },
+  );
+  await new Promise(setImmediate);
+  assert.deepEqual(harness.removedTabs, []);
+  assert.match(harness.openedTabs[0].url, /close-failed$/);
+  assert.equal(harness.errors.length, 1);
 });
 
 test("a malformed profile list shows the setup action", async () => {
