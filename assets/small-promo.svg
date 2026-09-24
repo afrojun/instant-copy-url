@@ -2,34 +2,19 @@
   <rect width="440" height="280" fill="#172033"/>
   <rect width="14" height="280" fill="#3157f6"/>
 
-  <g transform="translate(34 30) scale(.55)">
-    <rect x="18" y="18" width="76" height="76" rx="19" fill="#0b1020"/>
-    <rect x="26" y="27" width="60" height="51" rx="11" fill="#fff"/>
-    <rect x="34" y="34" width="76" height="76" rx="19" fill="#3157f6"/>
-    <circle cx="53" cy="55" r="6" fill="#fff"/>
-    <rect x="48" y="72" width="48" height="14" rx="7" fill="#fff"/>
+  <image href="icon.svg" x="34" y="42" width="118" height="118"/>
+
+  <text x="172" y="72" fill="#fff" font-family="Avenir Next, Arial, sans-serif" font-size="27" font-weight="700">Instant Copy URL</text>
+  <text x="172" y="105" fill="#b8c6e3" font-family="Avenir Next, Arial, sans-serif" font-size="17">Straight to your clipboard.</text>
+
+  <g transform="translate(172 136)" font-family="Avenir Next, Arial, sans-serif" font-size="23" font-weight="700" text-anchor="middle">
+    <rect width="54" height="58" rx="14" fill="#fff"/>
+    <text x="27" y="38" fill="#172033">⌘</text>
+    <rect x="64" width="54" height="58" rx="14" fill="#fff"/>
+    <text x="91" y="38" fill="#172033">⇧</text>
+    <rect x="128" width="54" height="58" rx="14" fill="#fff"/>
+    <text x="155" y="38" fill="#172033">C</text>
   </g>
 
-  <text x="116" y="64" fill="#fff" font-family="Avenir Next, Arial, sans-serif" font-size="24" font-weight="700">Instant Copy URL</text>
-  <text x="36" y="132" fill="#fff" font-family="Avenir Next, Arial, sans-serif" font-size="21" font-weight="700">Straight to your clipboard.</text>
-
-  <g transform="translate(36 166)" font-family="Avenir Next, Arial, sans-serif" font-weight="700" text-anchor="middle">
-    <rect width="54" height="54" rx="12" fill="#fff" stroke="#9bc5ff" stroke-width="2"/>
-    <text x="27" y="36" fill="#172033" font-size="22">⌘</text>
-    <rect x="64" width="54" height="54" rx="12" fill="#fff" stroke="#9bc5ff" stroke-width="2"/>
-    <text x="91" y="36" fill="#172033" font-size="22">⇧</text>
-    <rect x="128" width="54" height="54" rx="12" fill="#fff" stroke="#9bc5ff" stroke-width="2"/>
-    <text x="155" y="36" fill="#172033" font-size="22">C</text>
-  </g>
-
-  <path d="M230 193h18" fill="none" stroke="#9bc5ff" stroke-linecap="round" stroke-width="3"/>
-  <path d="m241 187 6 6-6 6" fill="none" stroke="#9bc5ff" stroke-linecap="round" stroke-linejoin="round" stroke-width="3"/>
-  <g transform="translate(258 164)">
-    <rect width="146" height="58" rx="14" fill="#3157f6"/>
-    <circle cx="24" cy="29" r="10" fill="#fff"/>
-    <path d="m19 29 4 4 7-9" fill="none" stroke="#3157f6" stroke-linecap="round" stroke-linejoin="round" stroke-width="3"/>
-    <text x="43" y="35" fill="#fff" font-family="Avenir Next, Arial, sans-serif" font-size="15" font-weight="700">URL copied</text>
-  </g>
-
-  <text x="36" y="251" fill="#b8c6e3" font-family="Avenir Next, Arial, sans-serif" font-size="13">Ctrl+Shift+C on Windows and Linux</text>
+  <text x="36" y="244" fill="#9bc5ff" font-family="Avenir Next, Arial, sans-serif" font-size="13" font-weight="600">Ctrl+Shift+C on Windows and Linux</text>
 </svg>

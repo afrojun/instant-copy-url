@@ -35,16 +35,20 @@ style.textContent = `
       copy-url-toast-out 180ms ease-in 4000ms forwards;
   }
 
-  .check {
-    display: grid;
-    width: 22px;
-    height: 22px;
-    place-items: center;
-    color: #0b57d0;
+  .bolt {
+    width: 20px;
+    height: 24px;
+    flex: 0 0 auto;
     background: #ffffff;
-    border-radius: 50%;
-    font-size: 14px;
-    line-height: 1;
+    clip-path: polygon(
+      60% 0,
+      12% 58%,
+      45% 58%,
+      27% 100%,
+      90% 40%,
+      57% 40%,
+      79% 0
+    );
   }
 
   .close {
@@ -93,10 +97,9 @@ style.textContent = `
 const toast = document.createElement("div");
 toast.className = "toast";
 
-const check = document.createElement("span");
-check.className = "check";
-check.setAttribute("aria-hidden", "true");
-check.textContent = "✓";
+const bolt = document.createElement("span");
+bolt.className = "bolt";
+bolt.setAttribute("aria-hidden", "true");
 
 const message = document.createElement("span");
 message.setAttribute("role", "status");
@@ -109,7 +112,7 @@ close.type = "button";
 close.setAttribute("aria-label", "Dismiss copied message");
 close.textContent = "×";
 
-toast.append(check, message, close);
+toast.append(bolt, message, close);
 shadow.append(style, toast);
 document.documentElement.append(host);
 
