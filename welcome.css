@@ -22,7 +22,7 @@ body {
 
 main {
   width: min(920px, 100%);
-  min-height: 560px;
+  min-height: 640px;
   display: grid;
   grid-template-columns: minmax(280px, 0.9fr) minmax(360px, 1.1fr);
   overflow: hidden;
@@ -185,6 +185,36 @@ button:focus-visible {
 .note {
   margin: 20px 0 0;
   color: #777c84;
+}
+
+.profilebar {
+  margin-top: 30px;
+  padding-top: 26px;
+  border-top: 1px solid #dfe3ec;
+}
+
+.profilebar .eyebrow {
+  margin: 0 0 8px;
+  color: #45536a;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.profilebar h2 {
+  margin: 0 0 9px;
+  font-size: 20px;
+  line-height: 1.25;
+}
+
+.profilebar p:last-child {
+  margin: 0;
+  color: #5f6368;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.profilebar a {
+  color: #2447db;
 }
 
 code {

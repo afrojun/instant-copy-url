@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Instant Copy URL",
   "version": "1.6.0",
-  "description": "Copy a tab URL with a shortcut, or move it to another Chrome profile.",
+  "description": "Copy a tab URL with a shortcut, or move it to another Chrome profile with ProfileBar on Mac.",
   "minimum_chrome_version": "116",
   "icons": {
     "16": "icons/icon-16.png",

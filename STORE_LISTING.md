@@ -4,7 +4,7 @@
 
 **Name:** Instant Copy URL
 
-**Summary:** Copy a tab URL with a shortcut, or move it to another Chrome profile.
+**Summary:** Copy a tab URL with a shortcut, or move it to another Chrome profile with ProfileBar on Mac.
 
 **Category:** Productivity
 
@@ -17,9 +17,10 @@ one-time setup. Once assigned, the shortcut skips the address bar and shows a
 clear confirmation when the URL is ready to paste.
 
 On macOS, install ProfileBar to move a page URL to another Chrome profile from
-its right-click menu. The original tab closes after the URL is opened there.
-The native messaging permission is optional and requested
-only when you enable this feature. The copy shortcut still works on its own.
+its right-click menu. The original tab closes after ProfileBar reports a
+successful handoff. The setup page introduces this optional feature, and
+the native messaging permission is requested only when you enable it from the
+menu. The copy shortcut still works on its own.
 
 Everything happens on your device. For a selected profile action, the URL is
 sent only to the local ProfileBar app, which asks Chrome to open it. The
@@ -27,7 +28,7 @@ extension stores no URLs and has no analytics, ads, tracking, accounts, remote
 code, or network requests.
 Its source code is available under the MIT License.
 
-**Website:** https://github.com/afrojun/instant-copy-url
+**Website:** https://afrojun.dev/instant-copy-url/
 
 **Support:** https://github.com/afrojun/instant-copy-url/issues
 

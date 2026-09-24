@@ -57,7 +57,8 @@ development native host. Give the dev extension ID shown by Chrome to
 The published extension suggests its copy shortcut automatically. If Chrome
 does not assign it, open the setup page that appears after installation and
 follow its instructions. You can reopen that page later from the extension's
-**Details** page by selecting **Extension options**.
+**Details** page by selecting **Extension options**. The same setup page
+introduces the optional ProfileBar integration on macOS.
 
 ## Test
 
