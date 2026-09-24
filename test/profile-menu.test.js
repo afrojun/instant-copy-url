@@ -146,12 +146,15 @@ test("missing helper and unsupported pages leave the source tab in place", async
   harness.setNativeError(new Error("Specified native messaging host not found"));
   await harness.refresh();
   assert.ok(harness.menus.some((item) => item.id === "setup-profilebar"));
+  harness.listeners.clicked({ menuItemId: "setup-profilebar" });
+  await new Promise(setImmediate);
+  assert.equal(harness.openedTabs[0].url, "https://afrojun.dev/profilebar/#move-tabs");
 
   harness.setTab({ id: 42, url: "chrome://settings" });
   harness.listeners.clicked({ menuItemId: "profile:Default", pageUrl: "chrome://settings" }, { id: 42 });
   await new Promise(setImmediate);
-  assert.equal(harness.openedTabs.length, 1);
-  assert.match(harness.openedTabs[0].url, /unsupported-url$/);
+  assert.equal(harness.openedTabs.length, 2);
+  assert.match(harness.openedTabs[1].url, /unsupported-url$/);
   assert.equal(harness.nativeMessages.length, 1);
   assert.deepEqual(harness.removedTabs, []);
 });

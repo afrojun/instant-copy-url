@@ -206,11 +206,15 @@ button:focus-visible {
   line-height: 1.25;
 }
 
-.profilebar p:last-child {
+.profilebar p {
   margin: 0;
   color: #5f6368;
   font-size: 14px;
   line-height: 1.55;
+}
+
+.profilebar .help-links {
+  margin-top: 10px;
 }
 
 .profilebar a {

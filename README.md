@@ -11,6 +11,11 @@ success. Choose **Enable ProfileBar integration…** the first
 time; Chrome then asks for the optional native messaging permission. The copy
 shortcut works without ProfileBar or that permission.
 
+The setup and error pages link to the [tab-move guide](https://afrojun.dev/instant-copy-url/#move-tabs),
+[ProfileBar setup](https://afrojun.dev/profilebar/#move-tabs), and
+[help & feedback](https://github.com/afrojun/instant-copy-url/issues/new/choose).
+When ProfileBar is missing, the right-click menu opens the setup guide.
+
 ## Privacy
 
 The extension has:

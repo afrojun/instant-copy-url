@@ -7,7 +7,7 @@ const MENU_ENABLE = "enable-profilebar";
 const MENU_SETUP = "setup-profilebar";
 const MENU_REFRESH = "refresh-profiles";
 const PROFILE_PREFIX = "profile:";
-const PROFILEBAR_DOWNLOAD = "https://github.com/afrojun/profilebar/releases/latest";
+const PROFILEBAR_SETUP = "https://afrojun.dev/profilebar/#move-tabs";
 
 let menuRefresh = Promise.resolve();
 
@@ -32,7 +32,7 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
     return;
   }
   if (info.menuItemId === MENU_SETUP) {
-    void chrome.tabs.create({ url: PROFILEBAR_DOWNLOAD });
+    void chrome.tabs.create({ url: PROFILEBAR_SETUP });
     return;
   }
   if (info.menuItemId === MENU_REFRESH) {
@@ -79,7 +79,7 @@ async function buildProfileMenu() {
   } else if (state === "enable") {
     await createMenu({ id: MENU_ENABLE, parentId: MENU_ROOT, title: "Enable ProfileBar integration…", contexts });
   } else if (state === "setup") {
-    await createMenu({ id: MENU_SETUP, parentId: MENU_ROOT, title: "Install or open ProfileBar…", contexts });
+    await createMenu({ id: MENU_SETUP, parentId: MENU_ROOT, title: "Set up ProfileBar…", contexts });
   } else {
     const nameCounts = new Map();
     for (const profile of profiles) nameCounts.set(profile.name, (nameCounts.get(profile.name) ?? 0) + 1);
