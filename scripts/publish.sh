@@ -11,15 +11,29 @@ api="https://chromewebstore.googleapis.com/v2/$item"
 upload_api="https://chromewebstore.googleapis.com/upload/v2/$item"
 auth_header="Authorization: Bearer $CWS_ACCESS_TOKEN"
 
-response=$(curl --fail-with-body --silent --show-error \
+api_request() {
+  local action="$1" response status body message
+  shift
+  response=$(curl --silent --show-error --write-out '\n%{http_code}' "$@")
+  status=${response##*$'\n'}
+  body=${response%$'\n'*}
+  if [[ "$status" != 2* ]]; then
+    message=$(jq -r '.error.message // empty' <<< "$body" 2>/dev/null || true)
+    printf 'Chrome Web Store %s failed (HTTP %s): %s\n' \
+      "$action" "$status" "${message:-No error message returned}" >&2
+    return 1
+  fi
+  printf '%s' "$body"
+}
+
+response=$(api_request upload \
   -H "$auth_header" -X POST -T "$CWS_ARCHIVE" "$upload_api:upload")
 upload_state=$(jq -r '.uploadState // empty' <<< "$response")
 
 if [[ "$upload_state" == "IN_PROGRESS" ]]; then
   for _ in {1..30}; do
     sleep 10
-    response=$(curl --fail-with-body --silent --show-error \
-      -H "$auth_header" "$api:fetchStatus")
+    response=$(api_request status -H "$auth_header" "$api:fetchStatus")
     upload_state=$(jq -r '.lastAsyncUploadState // empty' <<< "$response")
     if [[ "$upload_state" != "IN_PROGRESS" ]]; then
       break
@@ -32,7 +46,7 @@ if [[ "$upload_state" != "SUCCEEDED" ]]; then
   exit 1
 fi
 
-response=$(curl --fail-with-body --silent --show-error \
+response=$(api_request publish \
   -H "$auth_header" -H 'Content-Type: application/json' \
   -X POST -d '{"publishType":"DEFAULT_PUBLISH"}' "$api:publish")
 publish_state=$(jq -r '.state // empty' <<< "$response")
