@@ -7,17 +7,15 @@ const vm = require("node:vm");
 const source = fs.readFileSync(path.join(__dirname, "..", "profile-menu.js"), "utf8");
 const storeID = "dhalfjnfoocnfpppmkpidbliccemicno";
 
-function menuHarness({ granted = false, tabsGranted = false, allowTabs = true, hostResponse = { ok: true, profiles: [] }, tabContext = true, os = "mac" } = {}) {
+function menuHarness({ granted = false, hostResponse = { ok: true, profiles: [] }, tabContext = true, os = "mac" } = {}) {
   const listeners = {};
   const menus = [];
   const nativeMessages = [];
-  const permissionRequests = [];
   const openedTabs = [];
   const removedTabs = [];
   const errors = [];
   const tabs = new Map();
   let hasPermission = granted;
-  let hasTabsPermission = tabsGranted;
   let nativeError;
   let closeError;
   let openGate;
@@ -38,14 +36,9 @@ function menuHarness({ granted = false, tabsGranted = false, allowTabs = true, h
     permissions: {
       onAdded: { addListener(listener) { listeners.added = listener; } },
       onRemoved: { addListener(listener) { listeners.removed = listener; } },
-      async contains({ permissions }) { return permissions.includes("tabs") ? hasTabsPermission : hasPermission; },
+      async contains() { return hasPermission; },
       async request({ permissions }) {
-        permissionRequests.push(permissions);
-        if (permissions.includes("tabs")) {
-          hasTabsPermission = allowTabs;
-          if (allowTabs) listeners.added?.({ permissions: ["tabs"] });
-          return allowTabs;
-        }
+        assert.deepEqual(Array.from(permissions), ["nativeMessaging"]);
         hasPermission = true;
         listeners.added?.({ permissions: ["nativeMessaging"] });
         return true;
@@ -60,8 +53,7 @@ function menuHarness({ granted = false, tabsGranted = false, allowTabs = true, h
     tabs: {
       async create(tab) { openedTabs.push(tab); },
       async query({ highlighted, windowId }) {
-        return [...tabs.values()].filter((tab) => (!highlighted || tab.highlighted) && tab.windowId === windowId)
-          .map((tab) => hasTabsPermission ? tab : { ...tab, url: undefined });
+        return [...tabs.values()].filter((tab) => (!highlighted || tab.highlighted) && tab.windowId === windowId);
       },
       async get(id) {
         if (!tabs.has(id)) throw new Error("Tab not found");
@@ -82,7 +74,6 @@ function menuHarness({ granted = false, tabsGranted = false, allowTabs = true, h
     listeners,
     menus,
     nativeMessages,
-    permissionRequests,
     openedTabs,
     removedTabs,
     errors,
@@ -140,10 +131,10 @@ test("a successful handoff closes the clicked tab after opening it in the select
   assert.deepEqual(profiles.map((item) => item.title), ["Work (Default)", "Work (Profile 2)"]);
   assert.equal(harness.menus[0].contexts.join(","), "page");
   assert.ok(harness.menus.some((item) => item.id === "move-selected-tabs-to-profile" && item.contexts.join(",") === "tab"));
-  assert.deepEqual(harness.menus.slice(-3).map((item) => item.id), [
-    "tab:profiles-refresh-divider", "tab:refresh-profiles", "tab:enable-selected-tabs",
+  assert.deepEqual(harness.menus.slice(-2).map((item) => item.id), [
+    "tab:profiles-refresh-divider", "tab:refresh-profiles",
   ]);
-  assert.equal(harness.menus.at(-3).type, "separator");
+  assert.equal(harness.menus.at(-2).type, "separator");
 
   harness.setTab({ id: 42, url: "https://example.com/from-tab" });
   harness.listeners.clicked(
@@ -252,12 +243,9 @@ test("a tab-menu move opens all highlighted tabs in strip order, then closes the
   harness.setTab({ id: 2, windowId: 7, index: 1, highlighted: true, url: "https://example.com/second" });
   harness.setTab({ id: 1, windowId: 7, index: 0, highlighted: true, url: "https://example.com/first" });
   harness.setTab({ id: 3, windowId: 8, index: 0, highlighted: true, url: "https://example.com/other-window" });
-  harness.listeners.clicked({ menuItemId: "tab:enable-selected-tabs" });
-  await new Promise(setImmediate);
   harness.listeners.clicked({ menuItemId: "tab:profile:Default" }, { id: 2, windowId: 7 });
   await new Promise(setImmediate);
 
-  assert.deepEqual(harness.permissionRequests.map((permissions) => Array.from(permissions)), [["tabs"]]);
   assert.equal(harness.nativeMessages.at(-1).message.type, "openURLs");
   assert.deepEqual(Array.from(harness.nativeMessages.at(-1).message.urls), [
     "https://example.com/first", "https://example.com/second",
@@ -265,22 +253,8 @@ test("a tab-menu move opens all highlighted tabs in strip order, then closes the
   assert.deepEqual(harness.removedTabs, [1, 2]);
 });
 
-test("declining tab access leaves the entire selection in place", async () => {
-  const harness = menuHarness({ granted: true, allowTabs: false });
-  harness.setTab({ id: 1, windowId: 7, index: 0, highlighted: true, url: "https://example.com/first" });
-  harness.setTab({ id: 2, windowId: 7, index: 1, highlighted: true, url: "https://example.com/second" });
-  harness.listeners.clicked({ menuItemId: "tab:enable-selected-tabs" });
-  await new Promise(setImmediate);
-  harness.listeners.clicked({ menuItemId: "tab:profile:Default" }, { id: 1, windowId: 7 });
-  await new Promise(setImmediate);
-
-  assert.equal(harness.nativeMessages.length, 0);
-  assert.deepEqual(harness.removedTabs, []);
-  assert.match(harness.openedTabs[0].url, /tabs-permission$/);
-});
-
 test("one unsupported selected URL aborts the entire move", async () => {
-  const harness = menuHarness({ granted: true, tabsGranted: true });
+  const harness = menuHarness({ granted: true });
   harness.setTab({ id: 1, windowId: 7, index: 0, highlighted: true, url: "https://example.com/" });
   harness.setTab({ id: 2, windowId: 7, index: 1, highlighted: true, url: "chrome://settings" });
   harness.listeners.clicked({ menuItemId: "tab:profile:Default" }, { id: 1, windowId: 7 });
@@ -292,7 +266,7 @@ test("one unsupported selected URL aborts the entire move", async () => {
 });
 
 test("a source change during a batch handoff leaves all originals open", async () => {
-  const harness = menuHarness({ granted: true, tabsGranted: true });
+  const harness = menuHarness({ granted: true });
   let confirmOpen;
   harness.setOpenGate(new Promise((resolve) => { confirmOpen = resolve; }));
   harness.setTab({ id: 1, windowId: 7, index: 0, highlighted: true, url: "https://example.com/first" });
@@ -308,7 +282,7 @@ test("a source change during a batch handoff leaves all originals open", async (
 });
 
 test("an older ProfileBar helper cannot close any selected tabs", async () => {
-  const harness = menuHarness({ granted: true, tabsGranted: true, hostResponse: { ok: false, error: "invalid_request" } });
+  const harness = menuHarness({ granted: true, hostResponse: { ok: false, error: "invalid_request" } });
   harness.setTab({ id: 1, windowId: 7, index: 0, highlighted: true, url: "https://example.com/first" });
   harness.setTab({ id: 2, windowId: 7, index: 1, highlighted: true, url: "https://example.com/second" });
   harness.listeners.clicked({ menuItemId: "tab:profile:Default" }, { id: 1, windowId: 7 });

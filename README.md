@@ -1,8 +1,9 @@
 # Instant Copy URL
 
-A Chrome extension that instantly copies the active tab URL when you press
-`Command+Shift+C` on macOS or `Ctrl+Shift+C` elsewhere, then confirms the copy
-with a small in-page toast.
+A Chrome extension that copies the current tab URL, or all highlighted tab
+URLs, when you press `Command+Shift+C` on macOS or `Ctrl+Shift+C` elsewhere.
+Multiple URLs are copied in tab order, one per line. A small in-page toast
+confirms the copy.
 
 With [ProfileBar](https://github.com/afrojun/profilebar) installed on macOS,
 right-click a page or tab and choose **Move tab to profile** to open its URL in
@@ -12,8 +13,6 @@ then asks for the optional native messaging permission. The copy
 shortcut works without ProfileBar or that permission.
 
 Select several tabs and right-click one of them to move their URLs together.
-Choose **Enable selected tab moves…** from that menu first; Chrome then asks
-for optional tab access so the extension can read the other selected URLs.
 
 The setup page can request optional ProfileBar access on macOS. You can also
 enable it from **Move tab to profile** in the right-click menu. The setup and
@@ -29,9 +28,8 @@ The extension has:
 - No host permissions.
 - No network access from the extension.
 - No storage or analytics.
-- Access to the current URL after you invoke the shortcut or choose a profile
-  from the right-click menu.
-- Optional access to selected tab URLs when moving multiple tabs.
+- Permission to read tab URLs. The extension reads highlighted tabs for the
+  copy shortcut and the clicked or highlighted tabs for a profile move.
 - No access to previously visited pages.
 
 When you choose a profile, the extension sends the selected URLs and profile
@@ -107,8 +105,10 @@ Before the first tagged release, complete the one-time setup in
 ## Permissions
 
 - `activeTab`: get temporary access to the current page after the keyboard
-  command, to read its URL and show the confirmation toast.
-- `clipboardWrite`: place that URL on the clipboard.
+  command to show the confirmation toast.
+- `tabs`: read the URLs of highlighted tabs for copying or moving them. This
+  core permission is requested when the extension is installed or updated.
+- `clipboardWrite`: place the selected URLs on the clipboard.
 - `offscreen`: host the minimal document required for clipboard access from a
   Manifest V3 background service worker.
 - `scripting`: show the local confirmation toast on the active page after a
@@ -116,6 +116,3 @@ Before the first tagged release, complete the one-time setup in
 - `contextMenus`: add the right-click profile menu.
 - Optional `nativeMessaging`: send a selected page URL and profile directory
   to ProfileBar on this Mac. Chrome asks only if you enable the integration.
-- Optional `tabs`: read the URLs of other selected tabs when you move more than
-  one. Chrome asks for this access when you enable selected tab moves. It does
-  not grant the page access needed for the toast.

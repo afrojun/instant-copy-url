@@ -104,7 +104,7 @@ bolt.setAttribute("aria-hidden", "true");
 const message = document.createElement("span");
 message.setAttribute("role", "status");
 message.setAttribute("aria-live", "polite");
-message.textContent = "URL copied";
+message.textContent = "Copied to clipboard";
 
 const close = document.createElement("button");
 close.className = "close";
@@ -119,9 +119,18 @@ document.documentElement.append(host);
 const removeToast = () => host.remove();
 const dismissToast = () => toast.classList.add("leaving");
 close.addEventListener("click", dismissToast);
+const onCopyToast = ({ type, count }) => {
+  if (type !== "copy-toast" || !Number.isInteger(count) || count < 1) return;
+  message.textContent = count === 1 ? "URL copied" : `${count} URLs copied`;
+  chrome.runtime.onMessage.removeListener(onCopyToast);
+};
+chrome.runtime.onMessage.addListener(onCopyToast);
 toast.addEventListener("animationend", ({ animationName }) => {
   if (animationName === "copy-url-toast-out") {
     removeToast();
   }
 });
-setTimeout(removeToast, 4500);
+setTimeout(() => {
+  chrome.runtime.onMessage.removeListener(onCopyToast);
+  removeToast();
+}, 4500);

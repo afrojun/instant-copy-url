@@ -4,7 +4,7 @@
 
 **Name:** Instant Copy URL
 
-**Summary:** Copy a tab URL with a shortcut, or move it to another Chrome profile with ProfileBar on Mac.
+**Summary:** Copy selected tab URLs with one shortcut. On Mac, move tabs between Chrome profiles with ProfileBar.
 
 **Category:** Productivity
 
@@ -12,9 +12,10 @@
 
 **Detailed description:**
 
-Copy the link to your current tab with one shortcut. Instant Copy URL puts the
-full URL on your clipboard and shows a small confirmation, ready to paste into
-a message, document, or note. No need to select the address bar.
+Copy one link or a whole selection of tabs with one shortcut. Instant Copy URL
+puts their URLs on your clipboard in tab order, one per line, and confirms the
+copy. Paste them into a message, document, or note without selecting the
+address bar.
 
 On macOS, Instant Copy URL also works with ProfileBar to move pages between
 Chrome profiles. Right-click a page, choose a destination profile, and its URL
@@ -25,9 +26,10 @@ where they belong.
 
 Copying works on Mac, Windows, and Linux without ProfileBar. Chrome may assign
 Command+Shift+C on Mac or Ctrl+Shift+C on Windows and Linux; if it does not,
-the setup page helps you choose a shortcut. Moving tabs is optional and
-requires ProfileBar on macOS. Chrome asks for access when you enable that
-connection, and separately when you enable moves for selected tabs.
+the setup page helps you choose a shortcut. Chrome asks for tab URL access when
+you install or update the extension because copying selected tabs is a core
+feature. Moving tabs is optional and requires ProfileBar on macOS; Chrome asks
+separately for that local connection when you enable it.
 
 The extension stores no URLs and has no analytics, ads, tracking, accounts,
 remote code, or network requests. When you move tabs, their URLs go only to
@@ -42,14 +44,17 @@ https://github.com/afrojun/instant-copy-url/blob/main/PRIVACY.md
 
 ## Privacy
 
-**Single purpose:** Let the user copy the current tab URL or move one or more
-selected tab URLs to a chosen Chrome profile.
+**Single purpose:** Let the user copy one or more selected tab URLs or move them
+to a chosen Chrome profile.
 
 **Permission justifications:**
 
 - `activeTab`: Give temporary access to the current page when the user invokes
-  the shortcut, so the extension can read its URL and show the confirmation.
-- `clipboardWrite`: Write the active tab's URL to the user's clipboard.
+  the shortcut, so the extension can show the confirmation.
+- `tabs`: Read the highlighted tabs' URLs in the current window for the copy
+  shortcut or in the clicked window for an explicit profile move. The extension
+  does not scan tabs in the background.
+- `clipboardWrite`: Write the selected URLs to the user's clipboard.
 - `offscreen`: Provide the local document required to access the clipboard from
   a Manifest V3 extension service worker.
 - `scripting`: Insert the local confirmation message into the active page after
@@ -57,18 +62,14 @@ selected tab URLs to a chosen Chrome profile.
 - `contextMenus`: Show the user-selected profile action in the right-click menu.
 - Optional `nativeMessaging`: Exchange profile names and selected URLs with
   the local ProfileBar app after the user enables the integration.
-- Optional `tabs`: Read the URLs of other selected tabs after the user enables
-  selected tab moves. This permission does not allow the confirmation to be
-  shown on a page.
 
 **Remote code:** No. All executable code is included in the extension package.
 
-**Data handling:** The extension handles the active tab URL, or selected tab
-URLs for a multi-tab move, which is web browsing activity. It processes URLs
-locally after the user invokes the shortcut or chooses a profile from the
-right-click menu. The URLs are sent only to the local ProfileBar app for the
-selected profile action. Neither component retains them or collects other user
-data.
+**Data handling:** The extension handles selected tab URLs, which are web
+browsing activity. It processes URLs locally after the user invokes the copy
+shortcut or chooses a profile from the right-click menu. URLs go to the local
+ProfileBar app only for a profile move. Neither component retains them or
+collects other user data.
 
 Certify the limited-use declarations in the Dashboard. Check the Dashboard's
 current wording before submission because Google may change the available data
@@ -90,13 +91,16 @@ categories.
 4. Invoke the shortcut.
 5. Confirm that the active tab URL is on the clipboard and that the blue
    “URL copied” message appears at the top left of the page.
-6. On macOS with ProfileBar installed, enable its optional integration. Right-click
+6. Highlight multiple tabs in one window and invoke the shortcut. Confirm the
+   clipboard contains their URLs in tab order, one per line, and the toast
+   reports the number copied.
+7. On macOS with ProfileBar installed, enable its optional integration. Right-click
    an HTTP page or tab, choose **Move tab to profile**, and select another
    profile. Confirm the page opens there and the original tab closes. If the
    helper cannot open it, confirm the original tab stays open.
-7. Select multiple HTTP tabs in one window and right-click one selected tab.
-   Choose **Enable selected tab moves…**, allow optional tab access, choose a
-   profile, and confirm all selected URLs open there before the originals close.
+8. Select multiple HTTP tabs in one window and right-click one selected tab.
+   Choose a profile and confirm all selected URLs open there before the
+   originals close.
 
 Chrome does not allow scripts on protected pages such as `chrome://` pages. The
 URL is still copied there, but the confirmation message cannot be shown.

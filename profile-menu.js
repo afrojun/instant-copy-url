@@ -5,7 +5,6 @@ const NATIVE_HOST = chrome.runtime.id === STORE_EXTENSION_ID
 const MENU_ROOT = "move-to-profile";
 const TAB_MENU_ROOT = "move-selected-tabs-to-profile";
 const MENU_ENABLE = "enable-profilebar";
-const MENU_ENABLE_TABS = "enable-selected-tabs";
 const MENU_SETUP = "setup-profilebar";
 const MENU_REFRESH = "refresh-profiles";
 const PROFILE_PREFIX = "profile:";
@@ -20,12 +19,12 @@ chrome.runtime.onStartup.addListener(() => {
   void refreshProfileMenu();
 });
 chrome.permissions.onAdded.addListener(({ permissions }) => {
-  if (permissions.some((permission) => ["nativeMessaging", "tabs"].includes(permission))) {
+  if (permissions.includes("nativeMessaging")) {
     void refreshProfileMenu();
   }
 });
 chrome.permissions.onRemoved.addListener(({ permissions }) => {
-  if (permissions.some((permission) => ["nativeMessaging", "tabs"].includes(permission))) {
+  if (permissions.includes("nativeMessaging")) {
     void refreshProfileMenu();
   }
 });
@@ -34,11 +33,6 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
   if (menuId === MENU_ENABLE) {
     void chrome.permissions.request({ permissions: ["nativeMessaging"] })
       .catch((error) => console.error("Could not enable ProfileBar integration:", error));
-    return;
-  }
-  if (menuId === MENU_ENABLE_TABS) {
-    void chrome.permissions.request({ permissions: ["tabs"] })
-      .catch((error) => console.error("Could not enable selected tab moves:", error));
     return;
   }
   if (menuId === MENU_SETUP) {
@@ -116,13 +110,6 @@ async function buildContextMenu(root, context, prefix, state, profiles) {
   if (state !== "unsupported") {
     await createMenu({ id: `${prefix}${MENU_REFRESH}`, parentId: root, title: "Refresh profiles", contexts });
   }
-  if (context === "tab" && state === "ready"
-      && !await chrome.permissions.contains({ permissions: ["tabs"] })) {
-    await createMenu({
-      id: `${prefix}${MENU_ENABLE_TABS}`, parentId: root,
-      title: "Enable selected tab moves…", contexts,
-    });
-  }
 }
 
 function removeMenus() {
@@ -153,7 +140,7 @@ async function moveToProfile(menuId, info, tab, fromTabMenu) {
   try {
     sourceTabs = fromTabMenu ? await selectedTabs(tab) : [{ id: tab.id, url: info.pageUrl ?? tab.url }];
   } catch (error) {
-    await showProfileError(error.message === "tabs-permission" ? error.message : "selection-changed");
+    await showProfileError("selection-changed");
     return;
   }
   if (sourceTabs.some(({ url, pendingUrl }) => !url || !/^https?:\/\//i.test(url) || pendingUrl)) {
@@ -201,15 +188,7 @@ async function selectedTabs(clickedTab) {
   if (highlighted.length < 2 || !highlighted.some(({ id }) => id === clickedTab.id)) {
     return [{ id: clickedTab.id, url: clickedTab.url }];
   }
-  const selectedIds = highlighted.map(({ id }) => id).sort((a, b) => a - b);
-  if (!await chrome.permissions.contains({ permissions: ["tabs"] })) {
-    throw new Error("tabs-permission");
-  }
-  const selected = await chrome.tabs.query({ highlighted: true, windowId: clickedTab.windowId });
-  if (selected.map(({ id }) => id).sort((a, b) => a - b).join(",") !== selectedIds.join(",")) {
-    throw new Error("source-changed");
-  }
-  return selected.sort((a, b) => a.index - b.index);
+  return highlighted.sort((a, b) => a.index - b.index);
 }
 
 async function closeSourceTabs(sourceTabs) {
