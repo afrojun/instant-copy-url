@@ -13,13 +13,10 @@
           <img src="icons/icon-128.png" alt="" width="54" height="54" />
           <span>Instant Copy URL</span>
         </div>
-        <div class="shortcut-keys">
-          <div class="keys" aria-label="Command Shift C">
-            <kbd>⌘</kbd>
-            <kbd>⇧</kbd>
-            <kbd>C</kbd>
-          </div>
-          <p class="alternate">Ctrl+Shift+C on Windows and Linux</p>
+        <div class="keys" id="shortcut-keys" aria-label="Command Shift C">
+          <kbd id="shortcut-modifier">⌘</kbd>
+          <kbd>⇧</kbd>
+          <kbd>C</kbd>
         </div>
         <p>Copy any tab’s URL in one shortcut.</p>
       </section>
@@ -28,17 +25,18 @@
         <p class="status" id="status" data-state="checking" role="status">
           Checking your shortcut…
         </p>
-        <h1>Finish setting up your shortcut</h1>
-        <p class="intro">
-          Chrome may leave an extension shortcut unassigned when that key
-          combination is unavailable. Chrome requires you to choose it yourself.
+        <h1 id="shortcut-heading">Your copy shortcut</h1>
+        <p class="intro" id="shortcut-intro">
+          Chrome may assign the suggested shortcut automatically. If the status
+          above says it is unassigned, choose one in Chrome’s shortcut settings.
         </p>
 
-        <ol>
+        <ol id="shortcut-steps">
           <li>Open Chrome’s extension shortcut settings.</li>
           <li>Find <strong>Instant Copy URL</strong> and click the pencil.</li>
           <li>
-            Press the shortcut shown on the left and leave it set to
+            Try the shortcut shown on the left, or choose another if Chrome
+            reserves it. Leave the scope set to
             <strong>In Chrome</strong>.
           </li>
         </ol>
@@ -48,9 +46,63 @@
           Chrome could not open the page. Enter
           <code>chrome://extensions/shortcuts</code> in the address bar.
         </p>
-        <p class="note">
-          This extension cannot assign or replace shortcuts on your behalf.
-        </p>
+      </section>
+
+      <section class="profilebar" aria-labelledby="profilebar-title" hidden>
+        <div class="profilebar-copy">
+          <p class="eyebrow">Optional · macOS</p>
+          <h2 id="profilebar-title">Move tabs between Chrome profiles</h2>
+          <p>
+            Install <a href="https://afrojun.dev/profilebar/">ProfileBar</a>,
+            enable access below, then right-click a page (or a tab in Chrome
+            150+) and choose <strong>Move tab to profile</strong>. Your copy
+            shortcut works without ProfileBar.
+          </p>
+          <button id="enable-profilebar" type="button">Enable ProfileBar access</button>
+          <p id="profilebar-status" role="status">Checking ProfileBar access…</p>
+          <p class="help-links">
+            <a href="https://afrojun.dev/instant-copy-url/#move-tabs">How tab moves work</a>
+            · <a href="https://github.com/afrojun/instant-copy-url/issues/new/choose">Help &amp; feedback</a>
+          </p>
+        </div>
+        <figure class="profilebar-preview">
+          <div class="move-demo" aria-hidden="true">
+            <div class="demo-tabs">
+              <div class="demo-tab">
+                <strong>Personal</strong>
+                <span class="demo-tab-content">
+                  <span class="demo-source-url">example.com</span>
+                  <span class="demo-source-closed">Tab closed</span>
+                </span>
+              </div>
+              <span class="demo-arrow">→</span>
+              <div class="demo-tab">
+                <strong>Work</strong>
+                <span class="demo-tab-content demo-target-url">example.com</span>
+              </div>
+            </div>
+            <div class="demo-menus">
+              <div class="demo-menu">
+                <div class="demo-menu-row demo-menu-parent">
+                  <img src="icons/icon-16.png" alt="" width="16" height="16" />
+                  <span>Move tab to profile</span>
+                  <span class="demo-chevron">›</span>
+                </div>
+                <div class="demo-menu-divider"></div>
+                <div class="demo-menu-row">Close</div>
+                <div class="demo-menu-row">Close other tabs</div>
+              </div>
+              <div class="demo-menu demo-profile-menu">
+                <div class="demo-menu-row">Personal</div>
+                <div class="demo-menu-row demo-destination">Work</div>
+                <div class="demo-menu-row">Side project</div>
+                <div class="demo-menu-divider"></div>
+                <div class="demo-menu-row">Refresh profiles</div>
+              </div>
+            </div>
+          </div>
+          <figcaption>Choose Work. The page opens there, then the original tab closes.</figcaption>
+        </figure>
       </section>
     </main>
 

@@ -11,6 +11,9 @@ cd "$root"
 zip -q -FS "$archive" \
   LICENSE \
   background.js \
+  profile-menu.js \
+  integration-status.html \
+  integration-status.js \
   icons/icon-16.png \
   icons/icon-32.png \
   icons/icon-48.png \

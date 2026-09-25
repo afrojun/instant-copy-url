@@ -84,3 +84,9 @@ async function showToast(tabId) {
     console.debug("Copied the URL without showing a toast:", error);
   }
 }
+
+try {
+  importScripts("profile-menu.js");
+} catch (error) {
+  console.error("Could not load the profile menu:", error);
+}

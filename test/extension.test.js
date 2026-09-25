@@ -11,7 +11,7 @@ function runScript(file, context) {
   vm.runInNewContext(source, context);
 }
 
-test("manifest grants only the permissions required for active-tab copying", () => {
+test("manifest keeps native messaging optional while adding profile menus", () => {
   const manifest = JSON.parse(
     fs.readFileSync(path.join(root, "manifest.json"), "utf8"),
   );
@@ -20,7 +20,7 @@ test("manifest grants only the permissions required for active-tab copying", () 
   assert.equal(manifest.name, "Instant Copy URL");
   assert.equal(
     manifest.description,
-    "Copy the current tab's URL instantly with one keyboard shortcut.",
+    "Copy a tab URL with a shortcut, or move it to another Chrome profile with ProfileBar on Mac.",
   );
   assert.deepEqual(manifest.icons, {
     16: "icons/icon-16.png",
@@ -33,7 +33,9 @@ test("manifest grants only the permissions required for active-tab copying", () 
     "clipboardWrite",
     "offscreen",
     "scripting",
+    "contextMenus",
   ]);
+  assert.deepEqual(manifest.optional_permissions, ["nativeMessaging"]);
   assert.equal(
     manifest.commands["copy-current-url"].suggested_key.mac,
     "Command+Shift+C",
@@ -102,7 +104,7 @@ test("the background opens setup on install and copies the active tab URL", asyn
     },
   };
 
-  runScript("background.js", { chrome, console });
+  runScript("background.js", { chrome, console, importScripts() {} });
 
   installListener({ reason: "update" });
   assert.equal(optionsPageOpens, 0);
@@ -176,15 +178,34 @@ test("the setup page reports shortcut state and opens Chrome settings", async ()
   const listeners = {};
   let commands = [{ name: "copy-current-url", shortcut: "" }];
   let openedUrl;
+  let profileAccess = false;
+  let grantProfileAccess = false;
+  let permissionRequests = 0;
 
   const elements = {
     "#status": { dataset: {}, textContent: "" },
+    "#shortcut-heading": { textContent: "" },
+    "#shortcut-intro": { textContent: "" },
+    "#shortcut-steps": { hidden: false },
     "#fallback": { hidden: true },
+    "#shortcut-keys": {
+      setAttribute(name, value) { this[name] = value; },
+    },
+    "#shortcut-modifier": { textContent: "" },
+    ".profilebar": { hidden: true },
     "#open-shortcuts": {
       addEventListener(event, listener) {
-        listeners[event] = listener;
+        listeners.shortcutClick = listener;
       },
     },
+    "#enable-profilebar": {
+      disabled: false,
+      hidden: false,
+      addEventListener(event, listener) {
+        listeners.profileClick = listener;
+      },
+    },
+    "#profilebar-status": { textContent: "" },
   };
   const document = {
     querySelector(selector) {
@@ -207,6 +228,18 @@ test("the setup page reports shortcut state and opens Chrome settings", async ()
         openedUrl = url;
       },
     },
+    permissions: {
+      async contains() { return profileAccess; },
+      async request({ permissions }) {
+        assert.deepEqual(Array.from(permissions), ["nativeMessaging"]);
+        permissionRequests += 1;
+        profileAccess = grantProfileAccess;
+        return grantProfileAccess;
+      },
+    },
+    runtime: {
+      async getPlatformInfo() { return { os: "mac" }; },
+    },
   };
 
   runScript("welcome.js", { chrome, console, document, window });
@@ -214,12 +247,93 @@ test("the setup page reports shortcut state and opens Chrome settings", async ()
 
   assert.equal(elements["#status"].dataset.state, "missing");
   assert.equal(elements["#status"].textContent, "Shortcut not assigned");
+  assert.equal(elements["#shortcut-heading"].textContent, "Choose a copy shortcut");
+  assert.equal(elements["#shortcut-steps"].hidden, false);
+  assert.equal(elements["#shortcut-modifier"].textContent, "⌘");
+  assert.equal(elements["#shortcut-keys"]["aria-label"], "Command Shift C");
+  assert.equal(elements[".profilebar"].hidden, false);
+  assert.equal(elements["#enable-profilebar"].hidden, false);
+
+  listeners.profileClick();
+  assert.equal(permissionRequests, 1);
+  await new Promise(setImmediate);
+  assert.match(elements["#profilebar-status"].textContent, /not enabled/);
+  assert.equal(elements["#enable-profilebar"].disabled, false);
+
+  grantProfileAccess = true;
+  listeners.profileClick();
+  assert.equal(permissionRequests, 2);
+  await new Promise(setImmediate);
+  assert.equal(elements["#enable-profilebar"].hidden, true);
+  assert.match(elements["#profilebar-status"].textContent, /Access enabled/);
 
   commands = [{ name: "copy-current-url", shortcut: "Command+Shift+C" }];
   await listeners.focus();
   assert.equal(elements["#status"].dataset.state, "ready");
-  assert.equal(elements["#status"].textContent, "Ready: ⌘ ⇧ C");
+  assert.equal(elements["#status"].textContent, "Assigned: ⌘ ⇧ C");
+  assert.equal(elements["#shortcut-heading"].textContent, "Shortcut assigned");
+  assert.equal(elements["#shortcut-steps"].hidden, true);
+  assert.equal(elements["#open-shortcuts"].textContent, "Change shortcut");
 
-  await listeners.click();
+  await listeners.shortcutClick();
   assert.equal(openedUrl, "chrome://extensions/shortcuts");
+});
+
+test("the setup page shows the Windows and Linux shortcut without alternate copy", async () => {
+  const elements = {
+    "#status": { dataset: {}, textContent: "" },
+    "#shortcut-heading": { textContent: "" },
+    "#shortcut-intro": { textContent: "" },
+    "#shortcut-steps": { hidden: false },
+    "#fallback": { hidden: true },
+    "#shortcut-keys": { setAttribute(name, value) { this[name] = value; } },
+    "#shortcut-modifier": { textContent: "" },
+    ".profilebar": { hidden: true },
+    "#open-shortcuts": { addEventListener() {} },
+    "#enable-profilebar": { addEventListener() {} },
+    "#profilebar-status": { textContent: "" },
+  };
+  const chrome = {
+    commands: { async getAll() { return [{ name: "copy-current-url", shortcut: "Ctrl+Shift+C" }]; } },
+    runtime: { async getPlatformInfo() { return { os: "win" }; } },
+    permissions: { async contains() { return false; } },
+  };
+  runScript("welcome.js", {
+    chrome,
+    document: { querySelector(selector) { return elements[selector]; } },
+    window: { addEventListener() {} },
+  });
+  await new Promise(setImmediate);
+
+  assert.equal(elements["#shortcut-modifier"].textContent, "Ctrl");
+  assert.equal(elements["#shortcut-keys"]["aria-label"], "Control Shift C");
+  assert.equal(elements[".profilebar"].hidden, true);
+  assert.equal(elements["#status"].textContent, "Assigned: Ctrl ⇧ C");
+  assert.equal(elements["#enable-profilebar"].hidden, true);
+});
+
+test("the local Mac preview shows ProfileBar without offering a permission prompt", async () => {
+  const elements = {
+    "#status": { dataset: {}, textContent: "" },
+    "#shortcut-heading": { textContent: "" },
+    "#shortcut-intro": { textContent: "" },
+    "#shortcut-steps": { hidden: false },
+    "#fallback": { hidden: true },
+    "#shortcut-keys": { setAttribute() {} },
+    "#shortcut-modifier": { textContent: "" },
+    ".profilebar": { hidden: true },
+    "#open-shortcuts": { addEventListener() {} },
+    "#enable-profilebar": { addEventListener() {}, disabled: false },
+    "#profilebar-status": { textContent: "" },
+  };
+  runScript("welcome.js", {
+    navigator: { platform: "MacIntel" },
+    document: { querySelector(selector) { return elements[selector]; } },
+    window: { addEventListener() {} },
+  });
+  await new Promise(setImmediate);
+
+  assert.equal(elements[".profilebar"].hidden, false);
+  assert.equal(elements["#enable-profilebar"].disabled, true);
+  assert.match(elements["#profilebar-status"].textContent, /installed extension/);
 });
