@@ -17,6 +17,11 @@ chrome.runtime.onInstalled.addListener(() => {
 chrome.runtime.onStartup.addListener(() => {
   void refreshProfileMenu();
 });
+chrome.permissions.onAdded.addListener(({ permissions }) => {
+  if (permissions.includes("nativeMessaging")) {
+    void refreshProfileMenu();
+  }
+});
 chrome.permissions.onRemoved.addListener(({ permissions }) => {
   if (permissions.includes("nativeMessaging")) {
     void refreshProfileMenu();
@@ -25,9 +30,6 @@ chrome.permissions.onRemoved.addListener(({ permissions }) => {
 chrome.contextMenus.onClicked.addListener((info, tab) => {
   if (info.menuItemId === MENU_ENABLE) {
     void chrome.permissions.request({ permissions: ["nativeMessaging"] })
-      .then((granted) => {
-        if (granted) return refreshProfileMenu();
-      })
       .catch((error) => console.error("Could not enable ProfileBar integration:", error));
     return;
   }

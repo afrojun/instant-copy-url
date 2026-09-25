@@ -18,7 +18,6 @@ zip -q -FS "$archive" \
   icons/icon-32.png \
   icons/icon-48.png \
   icons/icon-128.png \
-  images/move-tab-to-profile.png \
   manifest.json \
   offscreen.html \
   offscreen.js \

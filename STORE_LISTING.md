@@ -12,15 +12,17 @@
 
 **Detailed description:**
 
-Choose Command+Shift+C on macOS or Ctrl+Shift+C on Windows and Linux during the
-one-time setup. Once assigned, the shortcut skips the address bar and shows a
-clear confirmation when the URL is ready to paste.
+Chrome may assign Command+Shift+C on macOS or Ctrl+Shift+C on Windows and Linux
+automatically. If it does not, choose a shortcut during setup. Once assigned,
+it skips the address bar and shows a clear confirmation when the URL is ready
+to paste.
 
 On macOS, install ProfileBar to move a page URL to another Chrome profile from
 its right-click menu. The original tab closes after ProfileBar reports a
-successful handoff. The setup page introduces this optional feature, and
-the native messaging permission is requested only when you enable it from the
-menu. The copy shortcut still works on its own.
+successful handoff. The setup page introduces this optional feature and lets
+you enable access; you can also enable it from the right-click menu. Chrome
+requests the native messaging permission only when you choose to enable it.
+The copy shortcut still works on its own.
 
 Everything happens on your device. For a selected profile action, the URL is
 sent only to the local ProfileBar app, which asks Chrome to open it. The

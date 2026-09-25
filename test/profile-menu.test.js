@@ -34,9 +34,14 @@ function menuHarness({ granted = false, hostResponse = { ok: true, profiles: [] 
       },
     },
     permissions: {
+      onAdded: { addListener(listener) { listeners.added = listener; } },
       onRemoved: { addListener(listener) { listeners.removed = listener; } },
       async contains() { return hasPermission; },
-      async request() { hasPermission = true; return true; },
+      async request() {
+        hasPermission = true;
+        listeners.added?.({ permissions: ["nativeMessaging"] });
+        return true;
+      },
     },
     contextMenus: {
       ContextType: tabContext ? { TAB: "tab" } : {},
@@ -85,6 +90,18 @@ test("profile menu starts with optional enablement and keeps a page fallback", a
   assert.equal(harness.nativeMessages.length, 0);
 });
 
+test("granting permission from the setup page refreshes the profile menu", async () => {
+  const harness = menuHarness({ granted: true, hostResponse: {
+    ok: true,
+    profiles: [{ directory: "Default", name: "Personal" }],
+  } });
+  harness.listeners.added({ permissions: ["nativeMessaging"] });
+  await new Promise(setImmediate);
+
+  assert.ok(harness.menus.some((item) => item.id === "profile:Default"));
+  assert.ok(!harness.menus.some((item) => item.id === "enable-profilebar"));
+});
+
 test("non-macOS users see availability without a permission request", async () => {
   const harness = menuHarness({ os: "win" });
   await harness.refresh();
@@ -103,7 +120,6 @@ test("a successful handoff closes the clicked tab after opening it in the select
   await harness.refresh();
   harness.listeners.clicked({ menuItemId: "enable-profilebar" });
   await new Promise(setImmediate);
-  await harness.refresh();
 
   const profiles = harness.menus.filter((item) => item.id.startsWith("profile:"));
   assert.deepEqual(profiles.map((item) => item.title), ["Work (Default)", "Work (Profile 2)"]);

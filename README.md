@@ -7,11 +7,13 @@ with a small in-page toast.
 With [ProfileBar](https://github.com/afrojun/profilebar) installed on macOS,
 right-click a page or tab and choose **Move tab to profile** to open its URL in
 another Chrome profile and close the original tab after ProfileBar reports
-success. Choose **Enable ProfileBar integration…** the first
-time; Chrome then asks for the optional native messaging permission. The copy
+success. Enable ProfileBar access on the setup page or from that menu; Chrome
+then asks for the optional native messaging permission. The copy
 shortcut works without ProfileBar or that permission.
 
-The setup and error pages link to the [tab-move guide](https://afrojun.dev/instant-copy-url/#move-tabs),
+The setup page can request optional ProfileBar access on macOS. You can also
+enable it from **Move tab to profile** in the right-click menu. The setup and
+error pages link to the [tab-move guide](https://afrojun.dev/instant-copy-url/#move-tabs),
 [ProfileBar setup](https://afrojun.dev/profilebar/#move-tabs), and
 [help & feedback](https://github.com/afrojun/instant-copy-url/issues/new/choose).
 When ProfileBar is missing, the right-click menu opens the setup guide.

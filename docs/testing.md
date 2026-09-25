@@ -29,7 +29,13 @@ full flow:
 1. On a fresh install, confirm the setup page opens. Check that it reports
    whether the shortcut is assigned. The Dev copy has no suggested shortcut;
    Chrome may also leave the published copy's suggestion unassigned. Check that
-   the profile-move screenshot loads and remains readable when the window is narrow.
+   an assigned shortcut shows its key combination and hides the manual steps, while
+   an unassigned shortcut shows the steps and shortcut settings button. Check that
+   macOS shows Command+Shift+C and the ProfileBar section; Windows/Linux show
+   Ctrl+Shift+C and hide that section. On macOS, check that the profile-move
+   example shows the divider and stays readable in a narrow window. Check that
+   the shortcut keys press in sequence, and that reduced-motion mode keeps
+   both the keys and profile-move example still.
 2. If needed, use the setup page's button to open
    `chrome://extensions/shortcuts` and assign the command. On macOS, try
    Command+Shift+C; on Windows and Linux, try Ctrl+Shift+C. If Chrome reserves
@@ -42,10 +48,12 @@ full flow:
    seconds.
 5. Repeat on a protected page such as `chrome://extensions`. The URL should
    still copy, but Chrome does not allow the on-page toast there.
-6. On macOS with ProfileBar Dev installed, enable the optional integration from
-   **Move tab to profile**. Confirm Chrome requests the native messaging
-   permission only then. Select another profile from an HTTP page and confirm
-   the destination opens before the source tab closes.
+6. On macOS with ProfileBar Dev installed, click **Enable ProfileBar access**
+   on the setup page. Confirm Chrome requests the native messaging permission
+   only then and the page reports access enabled. Confirm the profile menu
+   updates without using **Refresh profiles**. Select another profile from an
+   HTTP page and confirm the destination opens before the source tab closes.
+   Revoking permission should return the menu to its enable action.
 7. With the development native host unavailable, try again. Confirm the
    original tab stays open and the extension offers setup guidance. Repeat the
    copy shortcut to confirm it still works without ProfileBar.
