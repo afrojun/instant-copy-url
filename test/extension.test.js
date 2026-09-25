@@ -20,7 +20,7 @@ test("manifest keeps native messaging optional while adding profile menus", () =
   assert.equal(manifest.name, "Instant Copy URL");
   assert.equal(
     manifest.description,
-    "Copy a tab URL with a shortcut, or move it to another Chrome profile with ProfileBar on Mac.",
+    "Copy selected tab URLs with a shortcut, or move them between Chrome profiles with ProfileBar on Mac.",
   );
   assert.deepEqual(manifest.icons, {
     16: "icons/icon-16.png",
@@ -30,6 +30,7 @@ test("manifest keeps native messaging optional while adding profile menus", () =
   });
   assert.deepEqual(manifest.permissions, [
     "activeTab",
+    "tabs",
     "clipboardWrite",
     "offscreen",
     "scripting",
@@ -51,12 +52,16 @@ test("manifest keeps native messaging optional while adding profile menus", () =
   assert.equal(manifest.host_permissions, undefined);
 });
 
-test("the background opens setup on install and copies the active tab URL", async () => {
+test("the background copies highlighted tab URLs in strip order", async () => {
   let commandListener;
   let installListener;
   let createdDocument;
   let sentMessage;
+  const copiedMessages = [];
   let scriptInjection;
+  const toastMessages = [];
+  const errors = [];
+  let highlightedTabs = [{ id: 42, index: 0, active: true, url: "https://example.com/path?query=value" }];
   let optionsPageOpens = 0;
 
   const chrome = {
@@ -68,8 +73,13 @@ test("the background opens setup on install and copies the active tab URL", asyn
       },
     },
     tabs: {
-      async query() {
-        return [{ id: 42, url: "https://example.com/path?query=value" }];
+      async query(query) {
+        assert.equal(query.highlighted, true);
+        assert.equal(query.currentWindow, true);
+        return highlightedTabs;
+      },
+      async sendMessage(tabId, message) {
+        toastMessages.push({ tabId, message });
       },
     },
     runtime: {
@@ -89,6 +99,7 @@ test("the background opens setup on install and copies the active tab URL", asyn
       },
       async sendMessage(message) {
         sentMessage = message;
+        copiedMessages.push(message);
         return { ok: true };
       },
     },
@@ -104,7 +115,11 @@ test("the background opens setup on install and copies the active tab URL", asyn
     },
   };
 
-  runScript("background.js", { chrome, console, importScripts() {} });
+  runScript("background.js", {
+    chrome,
+    console: { error(...args) { errors.push(args); }, debug() {} },
+    importScripts() {},
+  });
 
   installListener({ reason: "update" });
   assert.equal(optionsPageOpens, 0);
@@ -118,13 +133,68 @@ test("the background opens setup on install and copies the active tab URL", asyn
   assert.equal(createdDocument.reasons.join(","), "CLIPBOARD");
   assert.equal(
     createdDocument.justification,
-    "Copy the active tab URL after the keyboard command.",
+    "Copy the selected tab URLs after the keyboard command.",
   );
   assert.equal(sentMessage.target, "offscreen");
   assert.equal(sentMessage.type, "copy-text");
   assert.equal(sentMessage.text, "https://example.com/path?query=value");
   assert.equal(scriptInjection.target.tabId, 42);
   assert.equal(scriptInjection.files.join(","), "toast.js");
+  assert.equal(toastMessages[0].tabId, 42);
+  assert.equal(toastMessages[0].message.type, "copy-toast");
+  assert.equal(toastMessages[0].message.count, 1);
+
+  highlightedTabs = [
+    { id: 42, index: 1, active: true, url: "https://example.com/second" },
+    { id: 43, index: 0, active: false, url: "https://example.com/first" },
+  ];
+  await commandListener("copy-current-url");
+
+  assert.equal(sentMessage.text, "https://example.com/first\nhttps://example.com/second");
+  assert.equal(toastMessages.at(-1).tabId, 42);
+  assert.equal(toastMessages.at(-1).message.count, 2);
+
+  highlightedTabs = [
+    { id: 42, index: 0, active: true, url: "https://example.com/" },
+    { id: 43, index: 1, active: false },
+  ];
+  await commandListener("copy-current-url");
+  assert.equal(copiedMessages.length, 2);
+  assert.equal(errors.length, 1);
+});
+
+test("the copy toast reports how many selected URLs were copied", () => {
+  const elements = [];
+  const messageListeners = new Set();
+  const document = {
+    querySelector() { return null; },
+    createElement(tag) {
+      const element = {
+        tag,
+        attributes: {},
+        classList: { add() {} },
+        setAttribute(name, value) { this.attributes[name] = value; },
+        attachShadow() { return { append() {} }; },
+        append() {},
+        addEventListener() {},
+        remove() {},
+      };
+      elements.push(element);
+      return element;
+    },
+    documentElement: { append() {} },
+  };
+  const chrome = { runtime: { onMessage: {
+    addListener(listener) { messageListeners.add(listener); },
+    removeListener(listener) { messageListeners.delete(listener); },
+  } } };
+
+  runScript("toast.js", { chrome, document, setTimeout() {} });
+  const message = elements.find((element) => element.attributes.role === "status");
+  assert.equal(message.textContent, "Copied to clipboard");
+  for (const listener of messageListeners) listener({ type: "copy-toast", count: 2 });
+  assert.equal(message.textContent, "2 URLs copied");
+  assert.equal(messageListeners.size, 0);
 });
 
 test("the offscreen document writes received text to the clipboard", () => {

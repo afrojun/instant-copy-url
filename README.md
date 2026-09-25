@@ -1,8 +1,9 @@
 # Instant Copy URL
 
-A Chrome extension that instantly copies the active tab URL when you press
-`Command+Shift+C` on macOS or `Ctrl+Shift+C` elsewhere, then confirms the copy
-with a small in-page toast.
+A Chrome extension that copies the current tab URL, or all highlighted tab
+URLs, when you press `Command+Shift+C` on macOS or `Ctrl+Shift+C` elsewhere.
+Multiple URLs are copied in tab order, one per line. A small in-page toast
+confirms the copy.
 
 With [ProfileBar](https://github.com/afrojun/profilebar) installed on macOS,
 right-click a page or tab and choose **Move tab to profile** to open its URL in
@@ -10,6 +11,8 @@ another Chrome profile and close the original tab after ProfileBar reports
 success. Enable ProfileBar access on the setup page or from that menu; Chrome
 then asks for the optional native messaging permission. The copy
 shortcut works without ProfileBar or that permission.
+
+Select several tabs and right-click one of them to move their URLs together.
 
 The setup page can request optional ProfileBar access on macOS. You can also
 enable it from **Move tab to profile** in the right-click menu. The setup and
@@ -25,20 +28,20 @@ The extension has:
 - No host permissions.
 - No network access from the extension.
 - No storage or analytics.
-- Access to the current URL after you invoke the shortcut or choose a profile
-  from the right-click menu.
+- Permission to read tab URLs. The extension reads highlighted tabs for the
+  copy shortcut and the clicked or highlighted tabs for a profile move.
 - No access to previously visited pages.
 
-When you choose a profile, the extension sends that URL and the selected profile
+When you choose a profile, the extension sends the selected URLs and profile
 directory to ProfileBar through Chrome's local native messaging channel.
-ProfileBar passes them to Chrome to open the page. The URL is not stored by
+ProfileBar passes them to Chrome to open the pages. The URLs are not stored by
 either component. Chrome 150 and later show the menu on tabs as well as pages;
 older supported versions show it on pages.
 
-This moves the URL, not the tab's browsing history, form contents, scroll
-position, pinned state, or group membership. If ProfileBar cannot open the URL,
-the original tab stays open. If the original tab changes during the handoff,
-the extension leaves it open and explains what happened.
+This moves URLs, not browsing history, form contents, scroll position, pinned
+state, or group membership. If ProfileBar cannot open the URLs, the original
+tabs stay open. If any selected tab changes during the handoff, the extension
+leaves all of them open and explains what happened.
 
 ## Install
 
@@ -101,8 +104,11 @@ Before the first tagged release, complete the one-time setup in
 
 ## Permissions
 
-- `activeTab`: read the current tab URL only after the keyboard command.
-- `clipboardWrite`: place that URL on the clipboard.
+- `activeTab`: get temporary access to the current page after the keyboard
+  command to show the confirmation toast.
+- `tabs`: read the URLs of highlighted tabs for copying or moving them. This
+  core permission is requested when the extension is installed or updated.
+- `clipboardWrite`: place the selected URLs on the clipboard.
 - `offscreen`: host the minimal document required for clipboard access from a
   Manifest V3 background service worker.
 - `scripting`: show the local confirmation toast on the active page after a

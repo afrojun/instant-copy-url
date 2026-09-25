@@ -29,7 +29,7 @@ function menuHarness({ granted = false, hostResponse = { ok: true, profiles: [] 
       async sendNativeMessage(host, message) {
         nativeMessages.push({ host, message });
         if (nativeError) throw nativeError;
-        if (message.type === "openURL" && openGate) await openGate;
+        if (["openURL", "openURLs"].includes(message.type) && openGate) await openGate;
         return hostResponse;
       },
     },
@@ -37,7 +37,8 @@ function menuHarness({ granted = false, hostResponse = { ok: true, profiles: [] 
       onAdded: { addListener(listener) { listeners.added = listener; } },
       onRemoved: { addListener(listener) { listeners.removed = listener; } },
       async contains() { return hasPermission; },
-      async request() {
+      async request({ permissions }) {
+        assert.deepEqual(Array.from(permissions), ["nativeMessaging"]);
         hasPermission = true;
         listeners.added?.({ permissions: ["nativeMessaging"] });
         return true;
@@ -51,18 +52,23 @@ function menuHarness({ granted = false, hostResponse = { ok: true, profiles: [] 
     },
     tabs: {
       async create(tab) { openedTabs.push(tab); },
+      async query({ highlighted, windowId }) {
+        return [...tabs.values()].filter((tab) => (!highlighted || tab.highlighted) && tab.windowId === windowId);
+      },
       async get(id) {
         if (!tabs.has(id)) throw new Error("Tab not found");
         return tabs.get(id);
       },
-      async remove(id) {
+      async remove(ids) {
         if (closeError) throw closeError;
-        removedTabs.push(id);
-        tabs.delete(id);
+        for (const id of Array.isArray(ids) ? ids : [ids]) {
+          removedTabs.push(id);
+          tabs.delete(id);
+        }
       },
     },
   };
-  const context = vm.createContext({ chrome, console: { debug() {}, error(...args) { errors.push(args); } } });
+  const context = vm.createContext({ chrome, TextEncoder, console: { debug() {}, error(...args) { errors.push(args); } } });
   vm.runInContext(source, context);
   return {
     listeners,
@@ -123,8 +129,11 @@ test("a successful handoff closes the clicked tab after opening it in the select
 
   const profiles = harness.menus.filter((item) => item.id.startsWith("profile:"));
   assert.deepEqual(profiles.map((item) => item.title), ["Work (Default)", "Work (Profile 2)"]);
-  assert.equal(harness.menus[0].contexts.join(","), "page,tab");
-  assert.deepEqual(harness.menus.slice(-2).map((item) => item.id), ["profiles-refresh-divider", "refresh-profiles"]);
+  assert.equal(harness.menus[0].contexts.join(","), "page");
+  assert.ok(harness.menus.some((item) => item.id === "move-selected-tabs-to-profile" && item.contexts.join(",") === "tab"));
+  assert.deepEqual(harness.menus.slice(-2).map((item) => item.id), [
+    "tab:profiles-refresh-divider", "tab:refresh-profiles",
+  ]);
   assert.equal(harness.menus.at(-2).type, "separator");
 
   harness.setTab({ id: 42, url: "https://example.com/from-tab" });
@@ -227,4 +236,58 @@ test("a malformed profile list shows the setup action", async () => {
   const harness = menuHarness({ granted: true, hostResponse: { ok: true, profiles: [null] } });
   await harness.refresh();
   assert.ok(harness.menus.some((item) => item.id === "setup-profilebar"));
+});
+
+test("a tab-menu move opens all highlighted tabs in strip order, then closes them together", async () => {
+  const harness = menuHarness({ granted: true });
+  harness.setTab({ id: 2, windowId: 7, index: 1, highlighted: true, url: "https://example.com/second" });
+  harness.setTab({ id: 1, windowId: 7, index: 0, highlighted: true, url: "https://example.com/first" });
+  harness.setTab({ id: 3, windowId: 8, index: 0, highlighted: true, url: "https://example.com/other-window" });
+  harness.listeners.clicked({ menuItemId: "tab:profile:Default" }, { id: 2, windowId: 7 });
+  await new Promise(setImmediate);
+
+  assert.equal(harness.nativeMessages.at(-1).message.type, "openURLs");
+  assert.deepEqual(Array.from(harness.nativeMessages.at(-1).message.urls), [
+    "https://example.com/first", "https://example.com/second",
+  ]);
+  assert.deepEqual(harness.removedTabs, [1, 2]);
+});
+
+test("one unsupported selected URL aborts the entire move", async () => {
+  const harness = menuHarness({ granted: true });
+  harness.setTab({ id: 1, windowId: 7, index: 0, highlighted: true, url: "https://example.com/" });
+  harness.setTab({ id: 2, windowId: 7, index: 1, highlighted: true, url: "chrome://settings" });
+  harness.listeners.clicked({ menuItemId: "tab:profile:Default" }, { id: 1, windowId: 7 });
+  await new Promise(setImmediate);
+
+  assert.equal(harness.nativeMessages.length, 0);
+  assert.deepEqual(harness.removedTabs, []);
+  assert.match(harness.openedTabs[0].url, /unsupported-url$/);
+});
+
+test("a source change during a batch handoff leaves all originals open", async () => {
+  const harness = menuHarness({ granted: true });
+  let confirmOpen;
+  harness.setOpenGate(new Promise((resolve) => { confirmOpen = resolve; }));
+  harness.setTab({ id: 1, windowId: 7, index: 0, highlighted: true, url: "https://example.com/first" });
+  harness.setTab({ id: 2, windowId: 7, index: 1, highlighted: true, url: "https://example.com/second" });
+  harness.listeners.clicked({ menuItemId: "tab:profile:Default" }, { id: 1, windowId: 7 });
+  await new Promise(setImmediate);
+  harness.setTab({ id: 2, windowId: 7, index: 1, highlighted: true, url: "https://example.com/changed" });
+  confirmOpen();
+  await new Promise(setImmediate);
+
+  assert.deepEqual(harness.removedTabs, []);
+  assert.match(harness.openedTabs[0].url, /source-changed$/);
+});
+
+test("an older ProfileBar helper cannot close any selected tabs", async () => {
+  const harness = menuHarness({ granted: true, hostResponse: { ok: false, error: "invalid_request" } });
+  harness.setTab({ id: 1, windowId: 7, index: 0, highlighted: true, url: "https://example.com/first" });
+  harness.setTab({ id: 2, windowId: 7, index: 1, highlighted: true, url: "https://example.com/second" });
+  harness.listeners.clicked({ menuItemId: "tab:profile:Default" }, { id: 1, windowId: 7 });
+  await new Promise(setImmediate);
+
+  assert.deepEqual(harness.removedTabs, []);
+  assert.match(harness.openedTabs[0].url, /profilebar-update-required$/);
 });

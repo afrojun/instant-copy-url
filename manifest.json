@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Instant Copy URL",
-  "version": "1.6.1",
-  "description": "Copy a tab URL with a shortcut, or move it to another Chrome profile with ProfileBar on Mac.",
+  "version": "1.7.0",
+  "description": "Copy selected tab URLs with a shortcut, or move them between Chrome profiles with ProfileBar on Mac.",
   "minimum_chrome_version": "116",
   "icons": {
     "16": "icons/icon-16.png",
@@ -10,7 +10,7 @@
     "48": "icons/icon-48.png",
     "128": "icons/icon-128.png"
   },
-  "permissions": ["activeTab", "clipboardWrite", "offscreen", "scripting", "contextMenus"],
+  "permissions": ["activeTab", "tabs", "clipboardWrite", "offscreen", "scripting", "contextMenus"],
   "optional_permissions": ["nativeMessaging"],
   "background": {
     "service_worker": "background.js"
@@ -25,7 +25,7 @@
         "default": "Ctrl+Shift+C",
         "mac": "Command+Shift+C"
       },
-      "description": "Copy the current tab URL"
+      "description": "Copy the current or selected tab URLs"
     }
   }
 }

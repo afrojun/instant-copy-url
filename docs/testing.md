@@ -46,19 +46,26 @@ full flow:
 4. Confirm the blue **URL copied** toast appears at the top left. Close it
    early, then copy again and let it disappear on its own after about four
    seconds.
-5. Repeat on a protected page such as `chrome://extensions`. The URL should
+5. Highlight two tabs in the same window and invoke the shortcut. Paste into
+   a text field: their URLs should appear in tab-strip order, one per line.
+   Confirm the toast says **2 URLs copied**.
+6. Repeat on a protected page such as `chrome://extensions`. The URL should
    still copy, but Chrome does not allow the on-page toast there.
-6. On macOS with ProfileBar Dev installed, click **Enable ProfileBar access**
+7. On macOS with ProfileBar Dev installed, click **Enable ProfileBar access**
    on the setup page. Confirm Chrome requests the native messaging permission
    only then and the page reports access enabled. Confirm the profile menu
    updates without using **Refresh profiles**. Select another profile from an
    HTTP page and confirm the destination opens before the source tab closes.
    Revoking permission should return the menu to its enable action.
-7. With the development native host unavailable, try again. Confirm the
+8. With the development native host unavailable, try again. Confirm the
    original tab stays open and the extension offers setup guidance. Repeat the
    copy shortcut to confirm it still works without ProfileBar.
-8. If the source tab navigates during the handoff, confirm it stays open and
+9. If the source tab navigates during the handoff, confirm it stays open and
    the extension explains that the destination also opened.
+10. Select two HTTP tabs in the same Chrome window, right-click one selected
+    tab, and choose a destination. Both pages should open in tab-strip order,
+    and both originals should close. Repeat with a selected `chrome://` tab;
+    neither page should move.
 
 Check keyboard focus and reduced-motion behavior when changing the setup page
 or toast. A successful Node test run alone does not establish that Chrome

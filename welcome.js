@@ -89,7 +89,7 @@ async function showShortcutStatus() {
     status.dataset.state = "ready";
     status.textContent = `Assigned: ${formatShortcut(copyCommand.shortcut)}`;
     shortcutHeading.textContent = "Shortcut assigned";
-    shortcutIntro.textContent = "Try it on a page to confirm it copies the URL. You can change it in Chrome’s shortcut settings.";
+    shortcutIntro.textContent = "Try it on one tab, or select several to copy their URLs in tab order. You can change the shortcut in Chrome’s settings.";
     shortcutSteps.hidden = true;
     openShortcuts.textContent = "Change shortcut";
     return;
