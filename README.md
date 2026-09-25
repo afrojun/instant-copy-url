@@ -11,6 +11,10 @@ success. Enable ProfileBar access on the setup page or from that menu; Chrome
 then asks for the optional native messaging permission. The copy
 shortcut works without ProfileBar or that permission.
 
+Select several tabs and right-click one of them to move their URLs together.
+Choose **Enable selected tab moves…** from that menu first; Chrome then asks
+for optional tab access so the extension can read the other selected URLs.
+
 The setup page can request optional ProfileBar access on macOS. You can also
 enable it from **Move tab to profile** in the right-click menu. The setup and
 error pages link to the [tab-move guide](https://afrojun.dev/instant-copy-url/#move-tabs),
@@ -27,18 +31,19 @@ The extension has:
 - No storage or analytics.
 - Access to the current URL after you invoke the shortcut or choose a profile
   from the right-click menu.
+- Optional access to selected tab URLs when moving multiple tabs.
 - No access to previously visited pages.
 
-When you choose a profile, the extension sends that URL and the selected profile
+When you choose a profile, the extension sends the selected URLs and profile
 directory to ProfileBar through Chrome's local native messaging channel.
-ProfileBar passes them to Chrome to open the page. The URL is not stored by
+ProfileBar passes them to Chrome to open the pages. The URLs are not stored by
 either component. Chrome 150 and later show the menu on tabs as well as pages;
 older supported versions show it on pages.
 
-This moves the URL, not the tab's browsing history, form contents, scroll
-position, pinned state, or group membership. If ProfileBar cannot open the URL,
-the original tab stays open. If the original tab changes during the handoff,
-the extension leaves it open and explains what happened.
+This moves URLs, not browsing history, form contents, scroll position, pinned
+state, or group membership. If ProfileBar cannot open the URLs, the original
+tabs stay open. If any selected tab changes during the handoff, the extension
+leaves all of them open and explains what happened.
 
 ## Install
 
@@ -110,3 +115,5 @@ Before the first tagged release, complete the one-time setup in
 - `contextMenus`: add the right-click profile menu.
 - Optional `nativeMessaging`: send a selected page URL and profile directory
   to ProfileBar on this Mac. Chrome asks only if you enable the integration.
+- Optional `tabs`: read the URLs of other selected tabs when you move more than
+  one. Chrome asks for this access when you enable selected tab moves.

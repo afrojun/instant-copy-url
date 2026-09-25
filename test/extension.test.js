@@ -35,7 +35,7 @@ test("manifest keeps native messaging optional while adding profile menus", () =
     "scripting",
     "contextMenus",
   ]);
-  assert.deepEqual(manifest.optional_permissions, ["nativeMessaging"]);
+  assert.deepEqual(manifest.optional_permissions, ["nativeMessaging", "tabs"]);
   assert.equal(
     manifest.commands["copy-current-url"].suggested_key.mac,
     "Command+Shift+C",

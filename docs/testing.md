@@ -59,6 +59,12 @@ full flow:
    copy shortcut to confirm it still works without ProfileBar.
 8. If the source tab navigates during the handoff, confirm it stays open and
    the extension explains that the destination also opened.
+9. Select two HTTP tabs in the same Chrome window, right-click one selected
+   tab, and choose **Enable selected tab moves…**. Confirm Chrome asks for
+   optional tab access. Choose a destination; both pages should open in
+   tab-strip order, and both originals should close. Repeat after denying
+   access; neither original should close. Repeat with a selected
+   `chrome://` tab; neither page should move.
 
 Check keyboard focus and reduced-motion behavior when changing the setup page
 or toast. A successful Node test run alone does not establish that Chrome

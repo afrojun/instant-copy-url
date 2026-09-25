@@ -22,10 +22,13 @@ its right-click menu. The original tab closes after ProfileBar reports a
 successful handoff. The setup page introduces this optional feature and lets
 you enable access; you can also enable it from the right-click menu. Chrome
 requests the native messaging permission only when you choose to enable it.
-The copy shortcut still works on its own.
+Select multiple tabs and right-click one of them to move their URLs together.
+Choose **Enable selected tab moves…** from that menu first; Chrome then
+requests optional tab access to read the other selected URLs. Group names and
+colours are not recreated. The copy shortcut still works on its own.
 
-Everything happens on your device. For a selected profile action, the URL is
-sent only to the local ProfileBar app, which asks Chrome to open it. The
+Everything happens on your device. For a selected profile action, the URLs are
+sent only to the local ProfileBar app, which asks Chrome to open them. The
 extension stores no URLs and has no analytics, ads, tracking, accounts, remote
 code, or network requests.
 Its source code is available under the MIT License.
@@ -39,8 +42,8 @@ https://github.com/afrojun/instant-copy-url/blob/main/PRIVACY.md
 
 ## Privacy
 
-**Single purpose:** Let the user act on the current tab URL: copy it to the
-clipboard or move it to a chosen Chrome profile.
+**Single purpose:** Let the user copy the current tab URL or move one or more
+selected tab URLs to a chosen Chrome profile.
 
 **Permission justifications:**
 
@@ -52,16 +55,19 @@ clipboard or move it to a chosen Chrome profile.
 - `scripting`: Insert the local confirmation message into the active page after
   the URL has been copied.
 - `contextMenus`: Show the user-selected profile action in the right-click menu.
-- Optional `nativeMessaging`: Exchange profile names and a selected URL with
+- Optional `nativeMessaging`: Exchange profile names and selected URLs with
   the local ProfileBar app after the user enables the integration.
+- Optional `tabs`: Read the URLs of multiple selected tabs after the user
+  enables selected tab moves.
 
 **Remote code:** No. All executable code is included in the extension package.
 
-**Data handling:** The extension handles the active tab URL, which is web
-browsing activity. It processes the URL locally after the user invokes the
-shortcut or chooses a profile from the right-click menu. The URL is sent only
-to the local ProfileBar app for the selected profile action. It is not retained
-by the extension or ProfileBar, and neither component collects other user data.
+**Data handling:** The extension handles the active tab URL, or selected tab
+URLs for a multi-tab move, which is web browsing activity. It processes URLs
+locally after the user invokes the shortcut or chooses a profile from the
+right-click menu. The URLs are sent only to the local ProfileBar app for the
+selected profile action. Neither component retains them or collects other user
+data.
 
 Certify the limited-use declarations in the Dashboard. Check the Dashboard's
 current wording before submission because Google may change the available data
@@ -87,6 +93,9 @@ categories.
    an HTTP page or tab, choose **Move tab to profile**, and select another
    profile. Confirm the page opens there and the original tab closes. If the
    helper cannot open it, confirm the original tab stays open.
+7. Select multiple HTTP tabs in one window and right-click one selected tab.
+   Choose **Enable selected tab moves…**, allow optional tab access, choose a
+   profile, and confirm all selected URLs open there before the originals close.
 
 Chrome does not allow scripts on protected pages such as `chrome://` pages. The
 URL is still copied there, but the confirmation message cannot be shown.
