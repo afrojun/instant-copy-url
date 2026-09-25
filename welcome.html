@@ -52,12 +52,16 @@
           This extension cannot assign or replace shortcuts on your behalf.
         </p>
 
-        <section class="profilebar" aria-labelledby="profilebar-title">
+      </section>
+
+      <section class="profilebar" aria-labelledby="profilebar-title">
+        <div class="profilebar-copy">
           <p class="eyebrow">Optional · macOS</p>
           <h2 id="profilebar-title">Move tabs between Chrome profiles</h2>
           <p>
             Install <a href="https://afrojun.dev/profilebar/">ProfileBar</a>,
-            then right-click a page and choose <strong>Move tab to profile</strong>.
+            then right-click a page (or a tab in Chrome 150+) and choose
+            <strong>Move tab to profile</strong>.
             Choose <strong>Enable ProfileBar integration…</strong> from that menu,
             allow local access when Chrome asks, then pick a profile.
             Your copy shortcut works without ProfileBar.
@@ -66,7 +70,16 @@
             <a href="https://afrojun.dev/instant-copy-url/#move-tabs">How tab moves work</a>
             · <a href="https://github.com/afrojun/instant-copy-url/issues/new/choose">Help &amp; feedback</a>
           </p>
-        </section>
+        </div>
+        <figure class="profilebar-preview">
+          <img
+            src="images/move-tab-to-profile.png"
+            width="2170"
+            height="725"
+            alt="Example Chrome tab menu with Move tab to profile expanded to show Personal, Work, and Side project"
+          />
+          <figcaption>Example tab menu: choose a destination profile after setup.</figcaption>
+        </figure>
       </section>
     </main>
 

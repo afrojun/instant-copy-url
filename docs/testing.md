@@ -28,7 +28,8 @@ full flow:
 
 1. On a fresh install, confirm the setup page opens. Check that it reports
    whether the shortcut is assigned. The Dev copy has no suggested shortcut;
-   Chrome may also leave the published copy's suggestion unassigned.
+   Chrome may also leave the published copy's suggestion unassigned. Check that
+   the profile-move screenshot loads and remains readable when the window is narrow.
 2. If needed, use the setup page's button to open
    `chrome://extensions/shortcuts` and assign the command. On macOS, try
    Command+Shift+C; on Windows and Linux, try Ctrl+Shift+C. If Chrome reserves
