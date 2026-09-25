@@ -24,7 +24,8 @@ Store User Data Policy, including the Limited Use requirements.
 
 ## Permissions
 
-- `activeTab` reads the active tab's URL after you invoke the shortcut.
+- `activeTab` gives temporary access to the current page after you invoke the
+  shortcut, so the extension can read its URL and show the confirmation.
 - `clipboardWrite` copies that URL to your clipboard.
 - `offscreen` provides the local document Chrome requires for clipboard access
   from an extension service worker.

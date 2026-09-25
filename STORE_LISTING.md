@@ -12,26 +12,26 @@
 
 **Detailed description:**
 
-Chrome may assign Command+Shift+C on macOS or Ctrl+Shift+C on Windows and Linux
-automatically. If it does not, choose a shortcut during setup. Once assigned,
-it skips the address bar and shows a clear confirmation when the URL is ready
-to paste.
+Copy the link to your current tab with one shortcut. Instant Copy URL puts the
+full URL on your clipboard and shows a small confirmation, ready to paste into
+a message, document, or note. No need to select the address bar.
 
-On macOS, install ProfileBar to move a page URL to another Chrome profile from
-its right-click menu. The original tab closes after ProfileBar reports a
-successful handoff. The setup page introduces this optional feature and lets
-you enable access; you can also enable it from the right-click menu. Chrome
-requests the native messaging permission only when you choose to enable it.
-Select multiple tabs and right-click one of them to move their URLs together.
-Choose **Enable selected tab moves…** from that menu first; Chrome then
-requests optional tab access to read the other selected URLs. Group names and
-colours are not recreated. The copy shortcut still works on its own.
+On macOS, Instant Copy URL also works with ProfileBar to move pages between
+Chrome profiles. Right-click a page, choose a destination profile, and its URL
+opens there. In Chrome 150 and later, you can select several tabs and move them
+together from the tab menu. The original tabs close after ProfileBar reports a
+successful handoff. Keep work, personal, and side project pages in the profile
+where they belong.
 
-Everything happens on your device. For a selected profile action, the URLs are
-sent only to the local ProfileBar app, which asks Chrome to open them. The
-extension stores no URLs and has no analytics, ads, tracking, accounts, remote
-code, or network requests.
-Its source code is available under the MIT License.
+Copying works on Mac, Windows, and Linux without ProfileBar. Chrome may assign
+Command+Shift+C on Mac or Ctrl+Shift+C on Windows and Linux; if it does not,
+the setup page helps you choose a shortcut. Moving tabs is optional and
+requires ProfileBar on macOS. Chrome asks for access when you enable that
+connection, and separately when you enable moves for selected tabs.
+
+The extension stores no URLs and has no analytics, ads, tracking, accounts,
+remote code, or network requests. When you move tabs, their URLs go only to
+ProfileBar on your device. The source code is available under the MIT License.
 
 **Website:** https://afrojun.dev/instant-copy-url/
 
@@ -47,8 +47,8 @@ selected tab URLs to a chosen Chrome profile.
 
 **Permission justifications:**
 
-- `activeTab`: Read the active tab's URL only after the user invokes the
-  extension's keyboard shortcut.
+- `activeTab`: Give temporary access to the current page when the user invokes
+  the shortcut, so the extension can read its URL and show the confirmation.
 - `clipboardWrite`: Write the active tab's URL to the user's clipboard.
 - `offscreen`: Provide the local document required to access the clipboard from
   a Manifest V3 extension service worker.
@@ -57,8 +57,9 @@ selected tab URLs to a chosen Chrome profile.
 - `contextMenus`: Show the user-selected profile action in the right-click menu.
 - Optional `nativeMessaging`: Exchange profile names and selected URLs with
   the local ProfileBar app after the user enables the integration.
-- Optional `tabs`: Read the URLs of multiple selected tabs after the user
-  enables selected tab moves.
+- Optional `tabs`: Read the URLs of other selected tabs after the user enables
+  selected tab moves. This permission does not allow the confirmation to be
+  shown on a page.
 
 **Remote code:** No. All executable code is included in the extension package.
 

@@ -106,7 +106,8 @@ Before the first tagged release, complete the one-time setup in
 
 ## Permissions
 
-- `activeTab`: read the current tab URL only after the keyboard command.
+- `activeTab`: get temporary access to the current page after the keyboard
+  command, to read its URL and show the confirmation toast.
 - `clipboardWrite`: place that URL on the clipboard.
 - `offscreen`: host the minimal document required for clipboard access from a
   Manifest V3 background service worker.
@@ -116,4 +117,5 @@ Before the first tagged release, complete the one-time setup in
 - Optional `nativeMessaging`: send a selected page URL and profile directory
   to ProfileBar on this Mac. Chrome asks only if you enable the integration.
 - Optional `tabs`: read the URLs of other selected tabs when you move more than
-  one. Chrome asks for this access when you enable selected tab moves.
+  one. Chrome asks for this access when you enable selected tab moves. It does
+  not grant the page access needed for the toast.
