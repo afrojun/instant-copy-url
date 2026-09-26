@@ -12,6 +12,8 @@ zip -q -FS "$archive" \
   LICENSE \
   background.js \
   profile-menu.js \
+  group-receiver.html \
+  group-receiver.js \
   integration-status.html \
   integration-status.js \
   icons/icon-16.png \

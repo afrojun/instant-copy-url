@@ -19,7 +19,7 @@ jobs:
           node-version: '24'
       - run: node --test
       - run: |
-          for file in background.js offscreen.js toast.js welcome.js; do
+          for file in background.js offscreen.js toast.js welcome.js profile-menu.js group-receiver.js; do
             node --check "$file"
           done
       - run: |
