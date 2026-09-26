@@ -4,7 +4,7 @@
 
 **Name:** Instant Copy URL
 
-**Summary:** Copy selected tab URLs with one shortcut. On Mac, move tabs between Chrome profiles with ProfileBar.
+**Summary:** Copy tab URLs in one shortcut. On Mac, move tabs and groups between profiles with ProfileBar.
 
 **Category:** Productivity
 
@@ -15,7 +15,7 @@
 Copy one link or a whole selection of tabs with one shortcut. Instant Copy URL
 puts their URLs on your clipboard in tab order, one per line, and confirms the
 copy. Paste them into a message, document, or note without selecting the
-address bar.
+address bar. Right-click a tab inside a group to copy every URL in that group.
 
 On macOS, Instant Copy URL also works with ProfileBar to move pages between
 Chrome profiles. Right-click a page, choose a destination profile, and its URL
@@ -23,6 +23,11 @@ opens there. In Chrome 150 and later, you can select several tabs and move them
 together from the tab menu. The original tabs close after ProfileBar reports a
 successful handoff. Keep work, personal, and side project pages in the profile
 where they belong.
+
+You can also right-click a tab inside a group and choose **Move group to
+profile**. When the destination profile has the current Instant Copy URL with
+ProfileBar access enabled, it recreates the group's title, colour, and collapsed state.
+Otherwise, the URLs still open in the chosen profile without a group.
 
 Copying works on Mac, Windows, and Linux without ProfileBar. Chrome may assign
 Command+Shift+C on Mac or Ctrl+Shift+C on Windows and Linux; if it does not,
@@ -44,22 +49,24 @@ https://github.com/afrojun/instant-copy-url/blob/main/PRIVACY.md
 
 ## Privacy
 
-**Single purpose:** Let the user copy one or more selected tab URLs or move them
-to a chosen Chrome profile.
+**Single purpose:** Let the user copy tab URLs, including selected tabs or a
+chosen group, and move selected tabs or a group to a chosen Chrome profile.
 
 **Permission justifications:**
 
 - `activeTab`: Give temporary access to the current page when the user invokes
   the shortcut, so the extension can show the confirmation.
 - `tabs`: Read the highlighted tabs' URLs in the current window for the copy
-  shortcut or in the clicked window for an explicit profile move. The extension
-  does not scan tabs in the background.
+  shortcut, or the clicked, highlighted, or grouped tabs for an explicit menu
+  action. The extension does not scan tabs in the background.
+- `tabGroups`: Read the chosen group's title, colour, and collapsed state, then
+  recreate those details after an explicit move to an enabled profile.
 - `clipboardWrite`: Write the selected URLs to the user's clipboard.
 - `offscreen`: Provide the local document required to access the clipboard from
   a Manifest V3 extension service worker.
 - `scripting`: Insert the local confirmation message into the active page after
   the URL has been copied.
-- `contextMenus`: Show the user-selected profile action in the right-click menu.
+- `contextMenus`: Show the group copy and profile actions in the right-click menu.
 - Optional `nativeMessaging`: Exchange profile names and selected URLs with
   the local ProfileBar app after the user enables the integration.
 
@@ -95,12 +102,18 @@ categories.
    clipboard contains their URLs in tab order, one per line, and the toast
    reports the number copied.
 7. On macOS with ProfileBar installed, enable its optional integration. Right-click
-   an HTTP page or tab, choose **Move tab to profile**, and select another
-   profile. Confirm the page opens there and the original tab closes. If the
+   an HTTP page, choose **Move tab to profile**, and select another profile.
+   From a tab, choose **Copy or move tabs**, then **Move tab to [profile]**.
+   Confirm the page opens there and the original tab closes. If the
    helper cannot open it, confirm the original tab stays open.
 8. Select multiple HTTP tabs in one window and right-click one selected tab.
    Choose a profile and confirm all selected URLs open there before the
    originals close.
+9. Right-click a tab inside a group, then choose **Copy or move tabs** and
+   **Copy group URLs**. Confirm all group URLs copy in tab order. Then choose
+   **Move group to [profile]** and confirm the title, colour, and collapsed
+   state are recreated when the destination
+   extension is enabled; otherwise, confirm the URLs open without a group.
 
 Chrome does not allow scripts on protected pages such as `chrome://` pages. The
 URL is still copied there, but the confirmation message cannot be shown.

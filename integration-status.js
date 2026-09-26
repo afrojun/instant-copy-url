@@ -7,8 +7,16 @@ const messages = {
   "profile-changed": "That Chrome profile is no longer available. Right-click the tab and choose Refresh profiles, then try again.",
   "profilebar-unavailable": "Open or install ProfileBar, then right-click the tab and choose Refresh profiles.",
   "open-failed": "ProfileBar could not open the selected pages in that profile. Try again or check that Chrome can open the profile.",
-  "profilebar-update-required": "Update ProfileBar to move multiple tabs together. The original tabs are still open.",
+  "profilebar-update-required": "Update ProfileBar to move multiple tabs or a group. The original tabs are still open.",
   "batch-too-large": "This selection is too large to move at once. Select fewer tabs and try again; nothing was moved.",
+  "not-in-group": "This tab is not in a group. Right-click a tab inside the group and try again.",
+  "group-changed": "Chrome could not identify that tab group. Nothing was moved or copied. Expand the group and right-click one of its tabs.",
+  "copy-failed": "Chrome could not copy those URLs. The tabs are still open; try again.",
+  "group-opened-ungrouped": "The tabs opened in the selected profile without a group. Install or update Instant Copy URL and enable ProfileBar access there to preserve the group next time.",
 };
 
-document.querySelector("#detail").textContent = messages[location.hash.slice(1)] ?? messages["open-failed"];
+const status = location.hash.slice(1);
+if (status === "group-opened-ungrouped") {
+  document.querySelector("#heading").textContent = "Tabs moved without a group";
+}
+document.querySelector("#detail").textContent = messages[status] ?? messages["open-failed"];

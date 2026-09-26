@@ -7,7 +7,7 @@ const vm = require("node:vm");
 const source = fs.readFileSync(path.join(__dirname, "..", "profile-menu.js"), "utf8");
 const storeID = "dhalfjnfoocnfpppmkpidbliccemicno";
 
-function menuHarness({ granted = false, hostResponse = { ok: true, profiles: [] }, tabContext = true, os = "mac" } = {}) {
+function menuHarness({ granted = false, hostResponse = { ok: true, profiles: [] }, tabContext = true, os = "mac", focused = true } = {}) {
   const listeners = {};
   const menus = [];
   const nativeMessages = [];
@@ -15,7 +15,12 @@ function menuHarness({ granted = false, hostResponse = { ok: true, profiles: [] 
   const removedTabs = [];
   const errors = [];
   const tabs = new Map();
+  const groups = new Map();
+  const copied = [];
+  const toasts = [];
   let hasPermission = granted;
+  let windowFocused = focused;
+  let groupResponse;
   let nativeError;
   let closeError;
   let openGate;
@@ -29,8 +34,8 @@ function menuHarness({ granted = false, hostResponse = { ok: true, profiles: [] 
       async sendNativeMessage(host, message) {
         nativeMessages.push({ host, message });
         if (nativeError) throw nativeError;
-        if (["openURL", "openURLs"].includes(message.type) && openGate) await openGate;
-        return hostResponse;
+        if (["openURL", "openURLs", "openGroup"].includes(message.type) && openGate) await openGate;
+        return message.type === "openGroup" ? groupResponse ?? hostResponse : hostResponse;
       },
     },
     permissions: {
@@ -44,6 +49,11 @@ function menuHarness({ granted = false, hostResponse = { ok: true, profiles: [] 
         return true;
       },
     },
+    windows: {
+      WINDOW_ID_NONE: -1,
+      onFocusChanged: { addListener(listener) { listeners.focusChanged = listener; } },
+      async getLastFocused() { return { focused: windowFocused }; },
+    },
     contextMenus: {
       ContextType: tabContext ? { TAB: "tab" } : {},
       onClicked: { addListener(listener) { listeners.clicked = listener; } },
@@ -52,8 +62,9 @@ function menuHarness({ granted = false, hostResponse = { ok: true, profiles: [] 
     },
     tabs: {
       async create(tab) { openedTabs.push(tab); },
-      async query({ highlighted, windowId }) {
-        return [...tabs.values()].filter((tab) => (!highlighted || tab.highlighted) && tab.windowId === windowId);
+      async query({ highlighted, groupId, windowId }) {
+        return [...tabs.values()].filter((tab) => (!highlighted || tab.highlighted)
+          && (groupId === undefined || tab.groupId === groupId) && tab.windowId === windowId);
       },
       async get(id) {
         if (!tabs.has(id)) throw new Error("Tab not found");
@@ -67,8 +78,19 @@ function menuHarness({ granted = false, hostResponse = { ok: true, profiles: [] 
         }
       },
     },
+    tabGroups: {
+      async get(id) {
+        if (!groups.has(id)) throw new Error("Group not found");
+        return groups.get(id);
+      },
+    },
   };
-  const context = vm.createContext({ chrome, TextEncoder, console: { debug() {}, error(...args) { errors.push(args); } } });
+  const context = vm.createContext({
+    chrome, TextEncoder,
+    copyUrls: async (urls) => copied.push([...urls]),
+    showToast: async (id, count) => toasts.push({ id, count }),
+    console: { debug() {}, error(...args) { errors.push(args); } },
+  });
   vm.runInContext(source, context);
   return {
     listeners,
@@ -77,11 +99,16 @@ function menuHarness({ granted = false, hostResponse = { ok: true, profiles: [] 
     openedTabs,
     removedTabs,
     errors,
+    copied,
+    toasts,
     refresh: () => vm.runInContext("refreshProfileMenu()", context),
+    setFocused(value) { windowFocused = value; },
     setNativeError(error) { nativeError = error; },
     setCloseError(error) { closeError = error; },
     setOpenGate(gate) { openGate = gate; },
     setTab(tab) { tabs.set(tab.id, tab); },
+    setGroup(group) { groups.set(group.id, group); },
+    setGroupResponse(response) { groupResponse = response; },
   };
 }
 
@@ -94,6 +121,40 @@ test("profile menu starts with optional enablement and keeps a page fallback", a
   ]);
   assert.equal(harness.menus[0].contexts.join(","), "page");
   assert.equal(harness.nativeMessages.length, 0);
+});
+
+test("a verified focused profile is omitted from both destination menus", async () => {
+  const harness = menuHarness({ granted: true, hostResponse: {
+    ok: true,
+    profiles: [
+      { directory: "Default", name: "Personal" },
+      { directory: "Profile 2", name: "Work" },
+    ],
+    focusedProfileDirectory: "Profile 2",
+  } });
+  await harness.refresh();
+  assert.deepEqual(harness.menus.filter((item) => item.id.startsWith("profile:")).map((item) => item.title), ["Personal"]);
+  assert.deepEqual(harness.menus.filter((item) => item.id.startsWith("tab:profile:")).map((item) => item.title), ["Move tab to Personal"]);
+  assert.deepEqual(harness.menus.filter((item) => item.id.startsWith("group:profile:")).map((item) => item.title), ["Move group to Personal"]);
+
+  harness.setFocused(false);
+  harness.listeners.focusChanged(-1);
+  await new Promise(setImmediate);
+  assert.equal(harness.menus.filter((item) => item.id.startsWith("profile:")).length, 2);
+  assert.equal(harness.menus.filter((item) => item.id.startsWith("tab:profile:")).length, 2);
+});
+
+test("one known profile leaves group copying and refresh available", async () => {
+  const harness = menuHarness({ granted: true, hostResponse: {
+    ok: true,
+    profiles: [{ directory: "Default", name: "Personal" }],
+    focusedProfileDirectory: "Default",
+  } });
+  await harness.refresh();
+  assert.ok(harness.menus.some((item) => item.id === "no-profiles" && item.enabled === false));
+  assert.ok(harness.menus.some((item) => item.id === "copy-group-urls"));
+  assert.ok(harness.menus.some((item) => item.id === "tab:refresh-profiles"));
+  assert.ok(!harness.menus.some((item) => item.id.startsWith("tab:profile:")));
 });
 
 test("granting permission from the setup page refreshes the profile menu", async () => {
@@ -130,11 +191,30 @@ test("a successful handoff closes the clicked tab after opening it in the select
   const profiles = harness.menus.filter((item) => item.id.startsWith("profile:"));
   assert.deepEqual(profiles.map((item) => item.title), ["Work (Default)", "Work (Profile 2)"]);
   assert.equal(harness.menus[0].contexts.join(","), "page");
-  assert.ok(harness.menus.some((item) => item.id === "move-selected-tabs-to-profile" && item.contexts.join(",") === "tab"));
-  assert.deepEqual(harness.menus.slice(-2).map((item) => item.id), [
+  const tabRoot = harness.menus.find((item) => item.id === "tab-actions");
+  assert.equal(tabRoot.title, "Copy or move tabs");
+  assert.equal(tabRoot.contexts.join(","), "tab");
+  assert.ok(harness.menus.some((item) => item.id === "copy-group-urls" && item.parentId === tabRoot.id));
+  assert.ok(harness.menus.filter((item) => item.contexts.join(",") === "tab")
+    .every((item) => item.id === tabRoot.id || item.parentId === tabRoot.id));
+  assert.deepEqual(harness.menus.filter((item) => item.id.startsWith("tab:profile:")).map((item) => item.title), [
+    "Move tab to Work (Default)", "Move tab to Work (Profile 2)",
+  ]);
+  assert.deepEqual(harness.menus.filter((item) => item.id.startsWith("group:profile:")).map((item) => item.title), [
+    "Move group to Work (Default)", "Move group to Work (Profile 2)",
+  ]);
+  const tabItems = harness.menus.filter((item) => item.contexts.join(",") === "tab");
+  assert.deepEqual(tabItems.map((item) => item.id), [
+    "tab-actions", "copy-group-urls", "tab:copy-divider",
+    "tab:profile:Default", "tab:profile:Profile%202", "tab:group-divider",
+    "group:profile:Default", "group:profile:Profile%202",
     "tab:profiles-refresh-divider", "tab:refresh-profiles",
   ]);
-  assert.equal(harness.menus.at(-2).type, "separator");
+  for (const divider of tabItems.filter((item) => item.id.endsWith("-divider"))) {
+    assert.equal(divider.enabled, false);
+    assert.equal(divider.title, "───────");
+    assert.equal(divider.parentId, tabRoot.id);
+  }
 
   harness.setTab({ id: 42, url: "https://example.com/from-tab" });
   harness.listeners.clicked(
@@ -251,6 +331,60 @@ test("a tab-menu move opens all highlighted tabs in strip order, then closes the
     "https://example.com/first", "https://example.com/second",
   ]);
   assert.deepEqual(harness.removedTabs, [1, 2]);
+});
+
+test("copy group URLs includes every member in strip order, even when not highlighted", async () => {
+  const harness = menuHarness({ os: "win" });
+  await harness.refresh();
+  harness.setGroup({ id: 8, windowId: 7, title: "Research", color: "blue", collapsed: false });
+  harness.setTab({ id: 2, windowId: 7, groupId: 8, index: 1, url: "https://example.com/second" });
+  harness.setTab({ id: 1, windowId: 7, groupId: 8, index: 0, url: "https://example.com/first" });
+  harness.setTab({ id: 3, windowId: 7, groupId: -1, index: 2, url: "https://example.com/other" });
+
+  harness.listeners.clicked({ menuItemId: "copy-group-urls" }, { id: 2, windowId: 7, groupId: 8 });
+  await new Promise(setImmediate);
+
+  assert.deepEqual(harness.copied, [["https://example.com/first", "https://example.com/second"]]);
+  assert.deepEqual(harness.toasts, [{ id: 2, count: 2 }]);
+});
+
+test("a group move preserves its metadata and reports the ungrouped fallback", async () => {
+  const harness = menuHarness({ granted: true });
+  harness.setGroup({ id: 8, windowId: 7, title: "Research", color: "blue", collapsed: true });
+  harness.setTab({ id: 2, windowId: 7, groupId: 8, index: 1, url: "https://example.com/second" });
+  harness.setTab({ id: 1, windowId: 7, groupId: 8, index: 0, url: "https://example.com/first" });
+  harness.setGroupResponse({ ok: true, grouped: false });
+
+  harness.listeners.clicked({ menuItemId: "group:profile:Default" }, { id: 2, windowId: 7, groupId: 8 });
+  await new Promise(setImmediate);
+
+  assert.equal(harness.nativeMessages.at(-1).message.type, "openGroup");
+  assert.deepEqual(Array.from(harness.nativeMessages.at(-1).message.urls), [
+    "https://example.com/first", "https://example.com/second",
+  ]);
+  assert.deepEqual(JSON.parse(JSON.stringify(harness.nativeMessages.at(-1).message.group)), {
+    title: "Research", color: "blue", collapsed: true,
+  });
+  assert.deepEqual(harness.removedTabs, [1, 2]);
+  assert.match(harness.openedTabs[0].url, /group-opened-ungrouped$/);
+});
+
+test("a changed group stays open after its destination is created", async () => {
+  const harness = menuHarness({ granted: true });
+  let confirmOpen;
+  harness.setOpenGate(new Promise((resolve) => { confirmOpen = resolve; }));
+  harness.setGroup({ id: 8, windowId: 7, title: "Research", color: "blue", collapsed: false });
+  harness.setTab({ id: 1, windowId: 7, groupId: 8, index: 0, url: "https://example.com/first" });
+  harness.setTab({ id: 2, windowId: 7, groupId: 8, index: 1, url: "https://example.com/second" });
+  harness.setGroupResponse({ ok: true, grouped: true });
+  harness.listeners.clicked({ menuItemId: "group:profile:Default" }, { id: 1, windowId: 7, groupId: 8 });
+  await new Promise(setImmediate);
+  harness.setTab({ id: 3, windowId: 7, groupId: 8, index: 2, url: "https://example.com/third" });
+  confirmOpen();
+  await new Promise(setImmediate);
+
+  assert.deepEqual(harness.removedTabs, []);
+  assert.match(harness.openedTabs[0].url, /source-changed$/);
 });
 
 test("one unsupported selected URL aborts the entire move", async () => {

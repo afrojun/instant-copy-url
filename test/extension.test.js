@@ -31,6 +31,7 @@ test("manifest keeps native messaging optional while adding profile menus", () =
   assert.deepEqual(manifest.permissions, [
     "activeTab",
     "tabs",
+    "tabGroups",
     "clipboardWrite",
     "offscreen",
     "scripting",
@@ -50,6 +51,91 @@ test("manifest keeps native messaging optional while adding profile menus", () =
     open_in_tab: true,
   });
   assert.equal(manifest.host_permissions, undefined);
+});
+
+test("the destination receiver recreates a group before acknowledging the move", async () => {
+  const calls = [];
+  const token = "a74ac3fb-1e22-49cc-84ce-efb579d7ade1";
+  const chrome = {
+    runtime: {
+      id: "dhalfjnfoocnfpppmkpidbliccemicno",
+      async sendNativeMessage(host, message) {
+        calls.push(["native", host, message]);
+        return message.type === "claimGroup"
+          ? { ok: true, urls: ["https://example.com/first", "https://example.com/second"],
+            group: { title: "Research", color: "blue", collapsed: true } }
+          : { ok: true };
+      },
+    },
+    tabs: {
+      async getCurrent() { return { id: 7, windowId: 4, index: 2 }; },
+      async create(options) {
+        calls.push(["create", options]);
+        return { id: calls.filter(([type]) => type === "create").length + 10 };
+      },
+      async group(options) { calls.push(["group", options]); return 22; },
+      async remove(ids) { calls.push(["remove", ids]); },
+    },
+    tabGroups: {
+      async update(id, details) { calls.push(["update", id, details]); },
+    },
+  };
+
+  runScript("group-receiver.js", {
+    chrome,
+    location: { hash: `#${token}`, pathname: "/group-receiver.html" },
+    history: { replaceState() {} },
+    console,
+  });
+  await new Promise(setImmediate);
+
+  assert.deepEqual(calls.filter(([type]) => type === "create").map(([, options]) => options.url), [
+    "https://example.com/first", "https://example.com/second",
+  ]);
+  assert.deepEqual(Array.from(calls.find(([type]) => type === "group")[1].tabIds), [11, 12]);
+  assert.deepEqual(JSON.parse(JSON.stringify(calls.find(([type]) => type === "update")[2])), {
+    title: "Research", color: "blue", collapsed: true,
+  });
+  assert.equal(calls.findIndex(([type, , message]) => type === "native" && message.type === "completeGroup")
+    > calls.findIndex(([type]) => type === "update"), true);
+  assert.deepEqual(calls.at(-1), ["remove", 7]);
+});
+
+test("a failed destination group removes created tabs and reports failure", async () => {
+  const calls = [];
+  const chrome = {
+    runtime: {
+      id: "dhalfjnfoocnfpppmkpidbliccemicno",
+      async sendNativeMessage(host, message) {
+        calls.push(["native", message]);
+        return message.type === "claimGroup"
+          ? { ok: true, urls: ["https://example.com/first", "https://example.com/second"],
+            group: { title: "Research", color: "blue", collapsed: false } }
+          : { ok: true };
+      },
+    },
+    tabs: {
+      async getCurrent() { return { id: 7, windowId: 4, index: 2 }; },
+      async create(options) {
+        calls.push(["create", options]);
+        if (options.url.endsWith("second")) throw new Error("Chrome could not create the tab");
+        return { id: 11 };
+      },
+      async remove(ids) { calls.push(["remove", ids]); },
+    },
+  };
+
+  runScript("group-receiver.js", {
+    chrome,
+    location: { hash: "#a74ac3fb-1e22-49cc-84ce-efb579d7ade1", pathname: "/group-receiver.html" },
+    history: { replaceState() {} },
+    console: { error() {}, debug() {} },
+  });
+  await new Promise(setImmediate);
+
+  assert.deepEqual(Array.from(calls.find(([type, ids]) => type === "remove" && Array.isArray(ids))[1]), [11]);
+  assert.equal(calls.find(([type, message]) => type === "native" && message.type === "completeGroup")[1].ok, false);
+  assert.deepEqual(calls.at(-1), ["remove", 7]);
 });
 
 test("the background copies highlighted tab URLs in strip order", async () => {

@@ -13,6 +13,8 @@ node --check background.js
 node --check offscreen.js
 node --check toast.js
 node --check welcome.js
+node --check profile-menu.js
+node --check group-receiver.js
 ```
 
 The Node tests cover the manifest, copy flow, offscreen clipboard write, setup
@@ -56,6 +58,9 @@ full flow:
    only then and the page reports access enabled. Confirm the profile menu
    updates without using **Refresh profiles**. Select another profile from an
    HTTP page and confirm the destination opens before the source tab closes.
+   When Chrome is focused and ProfileBar can identify its profile, confirm that
+   profile is absent from both destination menus. With an older helper or an
+   unidentifiable window, confirm all profiles stay visible.
    Revoking permission should return the menu to its enable action.
 8. With the development native host unavailable, try again. Confirm the
    original tab stays open and the extension offers setup guidance. Repeat the
@@ -66,6 +71,18 @@ full flow:
     tab, and choose a destination. Both pages should open in tab-strip order,
     and both originals should close. Repeat with a selected `chrome://` tab;
     neither page should move.
+11. Right-click a tab inside a group. The tab menu should have one
+    **Copy or move tabs** entry. Choose **Copy group URLs** from it and confirm
+    the clipboard contains every group URL in tab order, even if only one tab
+    was highlighted. The submenu should show tab and group destinations directly,
+    with short dividers after **Copy group URLs**, between tab and group
+    destinations, and above **Refresh profiles**.
+12. With the current extension and ProfileBar in both Chrome profiles, choose
+    **Move group to [profile]**. Confirm the destination gets the same URLs,
+    group title, colour, and collapsed state before the source group closes.
+    Repeat with the extension absent from the destination: the URLs should open
+    without a group, and the extension should explain the fallback. If the
+    destination cannot finish a claimed group, the source tabs should stay open.
 
 Check keyboard focus and reduced-motion behavior when changing the setup page
 or toast. A successful Node test run alone does not establish that Chrome

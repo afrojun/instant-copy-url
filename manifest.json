@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Instant Copy URL",
-  "version": "1.7.0",
+  "version": "1.8.0",
   "description": "Copy selected tab URLs with a shortcut, or move them between Chrome profiles with ProfileBar on Mac.",
   "minimum_chrome_version": "116",
   "icons": {
@@ -10,7 +10,7 @@
     "48": "icons/icon-48.png",
     "128": "icons/icon-128.png"
   },
-  "permissions": ["activeTab", "tabs", "clipboardWrite", "offscreen", "scripting", "contextMenus"],
+  "permissions": ["activeTab", "tabs", "tabGroups", "clipboardWrite", "offscreen", "scripting", "contextMenus"],
   "optional_permissions": ["nativeMessaging"],
   "background": {
     "service_worker": "background.js"
