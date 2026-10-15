@@ -173,11 +173,6 @@ button:hover {
   background: #2447db;
 }
 
-button:disabled {
-  cursor: default;
-  opacity: 0.55;
-}
-
 button:focus-visible {
   outline: 3px solid #8ab4f8;
   outline-offset: 3px;
@@ -194,221 +189,20 @@ button:focus-visible {
   color: #b3261e;
 }
 
-.profilebar {
-  grid-column: 1 / -1;
-  display: grid;
-  grid-template-columns: minmax(260px, 0.85fr) minmax(0, 1.15fr);
-  align-items: center;
-  gap: 32px;
-  padding: 24px 40px;
-  border-top: 1px solid #dfe3ec;
-  background: #f7f9fd;
-}
-
-.profilebar[hidden] {
-  display: none;
-}
-
-.profilebar .eyebrow {
-  margin: 0 0 8px;
-  color: #45536a;
-  font-size: 12px;
-  font-weight: 700;
-}
-
-.profilebar h2 {
-  margin: 0 0 9px;
-  font-size: 20px;
-  line-height: 1.25;
-}
-
-.profilebar p {
-  margin: 0;
+.more {
+  max-width: 52ch;
+  margin: 28px 0 0;
   color: #5f6368;
-  font-size: 14px;
-  line-height: 1.55;
+  font-size: 13px;
+  line-height: 1.5;
 }
 
-.profilebar button {
-  margin-top: 14px;
-}
-
-.profilebar #profilebar-status {
-  margin-top: 8px;
-  font-size: 12px;
-}
-
-.profilebar .help-links {
-  margin-top: 10px;
-}
-
-.profilebar a {
+.more a {
   color: #2447db;
-}
-
-.profilebar-preview {
-  min-width: 0;
-  margin: 0;
-  overflow-x: auto;
-}
-
-.move-demo {
-  min-width: 480px;
-  padding: 14px;
-  color: #eeeef1;
-  background: #191a1e;
-  border: 1px solid #43454c;
-  border-radius: 12px;
-  font-size: 14px;
-  --demo-cycle: 8s;
-}
-
-.demo-tabs {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 22px minmax(0, 1fr);
-  align-items: center;
-  gap: 7px;
-  margin-bottom: 12px;
-}
-
-.demo-tab {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
-  padding: 7px 9px;
-  background: #292b31;
-  border: 1px solid #4b4e56;
-  border-radius: 7px;
-  font-size: 12px;
-}
-
-.demo-tab strong {
-  flex: none;
-  color: #ffffff;
-}
-
-.demo-tab-content {
-  display: grid;
-  min-width: 0;
-  color: #c7ccd7;
-}
-
-.demo-tab-content span {
-  grid-area: 1 / 1;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
-.demo-source-url {
-  animation: source-leaves var(--demo-cycle) infinite;
-}
-
-.demo-source-closed,
-.demo-target-url {
-  opacity: 0;
-  animation: destination-opens var(--demo-cycle) infinite;
-}
-
-.demo-arrow {
-  color: #8ab4f8;
-  text-align: center;
-  opacity: 0.35;
-  animation: arrow-active var(--demo-cycle) infinite;
-}
-
-.demo-menus {
-  display: grid;
-  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
-  align-items: start;
-  gap: 6px;
-}
-
-.demo-menu {
-  padding: 6px;
-  background: #222327;
-  border: 1px solid #565860;
-  border-radius: 10px;
-}
-
-.demo-menu-row {
-  display: flex;
-  align-items: center;
-  min-height: 27px;
-  padding: 3px 9px;
-  white-space: nowrap;
-  border-radius: 6px;
-}
-
-.demo-menu-parent {
-  gap: 8px;
-  background: #393b42;
-  font-weight: 650;
-}
-
-.demo-chevron {
-  margin-left: auto;
-  font-size: 22px;
-  line-height: 0;
-}
-
-.demo-menu-divider {
-  height: 1px;
-  margin: 5px 9px;
-  background: #55575d;
-}
-
-.demo-destination {
-  animation: select-profile var(--demo-cycle) infinite;
-}
-
-@keyframes select-profile {
-  0%, 19%, 92%, 100% { background: transparent; }
-  21%, 85% { background: #2165b0; }
-}
-
-@keyframes source-leaves {
-  0%, 48%, 92%, 100% { opacity: 1; }
-  55%, 85% { opacity: 0; }
-}
-
-@keyframes destination-opens {
-  0%, 48%, 92%, 100% { opacity: 0; }
-  55%, 85% { opacity: 1; }
-}
-
-@keyframes arrow-active {
-  0%, 48%, 92%, 100% { opacity: 0.35; }
-  55%, 85% { opacity: 1; }
-}
-
-.profilebar-preview figcaption {
-  margin-top: 8px;
-  color: #5f6368;
-  font-size: 12px;
-  line-height: 1.4;
 }
 
 @media (prefers-reduced-motion: reduce) {
   .keys kbd {
-    animation: none;
-  }
-
-  .demo-source-url {
-    opacity: 0;
-    animation: none;
-  }
-
-  .demo-source-closed,
-  .demo-target-url,
-  .demo-arrow {
-    opacity: 1;
-    animation: none;
-  }
-
-  .demo-destination {
-    background: #2165b0;
     animation: none;
   }
 }
@@ -440,11 +234,5 @@ code {
 
   .shortcut {
     min-height: 300px;
-  }
-
-  .profilebar {
-    grid-template-columns: 1fr;
-    gap: 24px;
-    padding: 32px 28px;
   }
 }

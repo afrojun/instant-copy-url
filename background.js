@@ -89,7 +89,7 @@ async function showToast(tabId, count) {
 }
 
 try {
-  importScripts("profile-menu.js");
+  importScripts("group-menu.js");
 } catch (error) {
-  console.error("Could not load the profile menu:", error);
+  console.error("Could not load the group menu:", error);
 }

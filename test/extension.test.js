@@ -11,7 +11,7 @@ function runScript(file, context) {
   vm.runInNewContext(source, context);
 }
 
-test("manifest keeps native messaging optional while adding profile menus", () => {
+test("manifest requests only the copy permissions", () => {
   const manifest = JSON.parse(
     fs.readFileSync(path.join(root, "manifest.json"), "utf8"),
   );
@@ -20,7 +20,7 @@ test("manifest keeps native messaging optional while adding profile menus", () =
   assert.equal(manifest.name, "Instant Copy URL");
   assert.equal(
     manifest.description,
-    "Copy selected tab URLs with a shortcut, or move them between Chrome profiles with ProfileBar on Mac.",
+    "Copy tab URLs instantly. One shortcut copies the current or selected tabs, and a right-click copies a tab group.",
   );
   assert.deepEqual(manifest.icons, {
     16: "icons/icon-16.png",
@@ -31,13 +31,16 @@ test("manifest keeps native messaging optional while adding profile menus", () =
   assert.deepEqual(manifest.permissions, [
     "activeTab",
     "tabs",
-    "tabGroups",
     "clipboardWrite",
     "offscreen",
     "scripting",
     "contextMenus",
   ]);
-  assert.deepEqual(manifest.optional_permissions, ["nativeMessaging"]);
+  assert.equal(manifest.optional_permissions, undefined);
+  assert.equal(
+    manifest.commands["copy-current-url"].description,
+    "Copy the current or selected tab URLs",
+  );
   assert.equal(
     manifest.commands["copy-current-url"].suggested_key.mac,
     "Command+Shift+C",
@@ -51,91 +54,6 @@ test("manifest keeps native messaging optional while adding profile menus", () =
     open_in_tab: true,
   });
   assert.equal(manifest.host_permissions, undefined);
-});
-
-test("the destination receiver recreates a group before acknowledging the move", async () => {
-  const calls = [];
-  const token = "a74ac3fb-1e22-49cc-84ce-efb579d7ade1";
-  const chrome = {
-    runtime: {
-      id: "dhalfjnfoocnfpppmkpidbliccemicno",
-      async sendNativeMessage(host, message) {
-        calls.push(["native", host, message]);
-        return message.type === "claimGroup"
-          ? { ok: true, urls: ["https://example.com/first", "https://example.com/second"],
-            group: { title: "Research", color: "blue", collapsed: true } }
-          : { ok: true };
-      },
-    },
-    tabs: {
-      async getCurrent() { return { id: 7, windowId: 4, index: 2 }; },
-      async create(options) {
-        calls.push(["create", options]);
-        return { id: calls.filter(([type]) => type === "create").length + 10 };
-      },
-      async group(options) { calls.push(["group", options]); return 22; },
-      async remove(ids) { calls.push(["remove", ids]); },
-    },
-    tabGroups: {
-      async update(id, details) { calls.push(["update", id, details]); },
-    },
-  };
-
-  runScript("group-receiver.js", {
-    chrome,
-    location: { hash: `#${token}`, pathname: "/group-receiver.html" },
-    history: { replaceState() {} },
-    console,
-  });
-  await new Promise(setImmediate);
-
-  assert.deepEqual(calls.filter(([type]) => type === "create").map(([, options]) => options.url), [
-    "https://example.com/first", "https://example.com/second",
-  ]);
-  assert.deepEqual(Array.from(calls.find(([type]) => type === "group")[1].tabIds), [11, 12]);
-  assert.deepEqual(JSON.parse(JSON.stringify(calls.find(([type]) => type === "update")[2])), {
-    title: "Research", color: "blue", collapsed: true,
-  });
-  assert.equal(calls.findIndex(([type, , message]) => type === "native" && message.type === "completeGroup")
-    > calls.findIndex(([type]) => type === "update"), true);
-  assert.deepEqual(calls.at(-1), ["remove", 7]);
-});
-
-test("a failed destination group removes created tabs and reports failure", async () => {
-  const calls = [];
-  const chrome = {
-    runtime: {
-      id: "dhalfjnfoocnfpppmkpidbliccemicno",
-      async sendNativeMessage(host, message) {
-        calls.push(["native", message]);
-        return message.type === "claimGroup"
-          ? { ok: true, urls: ["https://example.com/first", "https://example.com/second"],
-            group: { title: "Research", color: "blue", collapsed: false } }
-          : { ok: true };
-      },
-    },
-    tabs: {
-      async getCurrent() { return { id: 7, windowId: 4, index: 2 }; },
-      async create(options) {
-        calls.push(["create", options]);
-        if (options.url.endsWith("second")) throw new Error("Chrome could not create the tab");
-        return { id: 11 };
-      },
-      async remove(ids) { calls.push(["remove", ids]); },
-    },
-  };
-
-  runScript("group-receiver.js", {
-    chrome,
-    location: { hash: "#a74ac3fb-1e22-49cc-84ce-efb579d7ade1", pathname: "/group-receiver.html" },
-    history: { replaceState() {} },
-    console: { error() {}, debug() {} },
-  });
-  await new Promise(setImmediate);
-
-  assert.deepEqual(Array.from(calls.find(([type, ids]) => type === "remove" && Array.isArray(ids))[1]), [11]);
-  assert.equal(calls.find(([type, message]) => type === "native" && message.type === "completeGroup")[1].ok, false);
-  assert.deepEqual(calls.at(-1), ["remove", 7]);
 });
 
 test("the background copies highlighted tab URLs in strip order", async () => {
@@ -334,9 +252,6 @@ test("the setup page reports shortcut state and opens Chrome settings", async ()
   const listeners = {};
   let commands = [{ name: "copy-current-url", shortcut: "" }];
   let openedUrl;
-  let profileAccess = false;
-  let grantProfileAccess = false;
-  let permissionRequests = 0;
 
   const elements = {
     "#status": { dataset: {}, textContent: "" },
@@ -348,20 +263,11 @@ test("the setup page reports shortcut state and opens Chrome settings", async ()
       setAttribute(name, value) { this[name] = value; },
     },
     "#shortcut-modifier": { textContent: "" },
-    ".profilebar": { hidden: true },
     "#open-shortcuts": {
       addEventListener(event, listener) {
         listeners.shortcutClick = listener;
       },
     },
-    "#enable-profilebar": {
-      disabled: false,
-      hidden: false,
-      addEventListener(event, listener) {
-        listeners.profileClick = listener;
-      },
-    },
-    "#profilebar-status": { textContent: "" },
   };
   const document = {
     querySelector(selector) {
@@ -384,15 +290,6 @@ test("the setup page reports shortcut state and opens Chrome settings", async ()
         openedUrl = url;
       },
     },
-    permissions: {
-      async contains() { return profileAccess; },
-      async request({ permissions }) {
-        assert.deepEqual(Array.from(permissions), ["nativeMessaging"]);
-        permissionRequests += 1;
-        profileAccess = grantProfileAccess;
-        return grantProfileAccess;
-      },
-    },
     runtime: {
       async getPlatformInfo() { return { os: "mac" }; },
     },
@@ -407,21 +304,6 @@ test("the setup page reports shortcut state and opens Chrome settings", async ()
   assert.equal(elements["#shortcut-steps"].hidden, false);
   assert.equal(elements["#shortcut-modifier"].textContent, "⌘");
   assert.equal(elements["#shortcut-keys"]["aria-label"], "Command Shift C");
-  assert.equal(elements[".profilebar"].hidden, false);
-  assert.equal(elements["#enable-profilebar"].hidden, false);
-
-  listeners.profileClick();
-  assert.equal(permissionRequests, 1);
-  await new Promise(setImmediate);
-  assert.match(elements["#profilebar-status"].textContent, /not enabled/);
-  assert.equal(elements["#enable-profilebar"].disabled, false);
-
-  grantProfileAccess = true;
-  listeners.profileClick();
-  assert.equal(permissionRequests, 2);
-  await new Promise(setImmediate);
-  assert.equal(elements["#enable-profilebar"].hidden, true);
-  assert.match(elements["#profilebar-status"].textContent, /Access enabled/);
 
   commands = [{ name: "copy-current-url", shortcut: "Command+Shift+C" }];
   await listeners.focus();
@@ -444,15 +326,11 @@ test("the setup page shows the Windows and Linux shortcut without alternate copy
     "#fallback": { hidden: true },
     "#shortcut-keys": { setAttribute(name, value) { this[name] = value; } },
     "#shortcut-modifier": { textContent: "" },
-    ".profilebar": { hidden: true },
     "#open-shortcuts": { addEventListener() {} },
-    "#enable-profilebar": { addEventListener() {} },
-    "#profilebar-status": { textContent: "" },
   };
   const chrome = {
     commands: { async getAll() { return [{ name: "copy-current-url", shortcut: "Ctrl+Shift+C" }]; } },
     runtime: { async getPlatformInfo() { return { os: "win" }; } },
-    permissions: { async contains() { return false; } },
   };
   runScript("welcome.js", {
     chrome,
@@ -463,12 +341,10 @@ test("the setup page shows the Windows and Linux shortcut without alternate copy
 
   assert.equal(elements["#shortcut-modifier"].textContent, "Ctrl");
   assert.equal(elements["#shortcut-keys"]["aria-label"], "Control Shift C");
-  assert.equal(elements[".profilebar"].hidden, true);
   assert.equal(elements["#status"].textContent, "Assigned: Ctrl ⇧ C");
-  assert.equal(elements["#enable-profilebar"].hidden, true);
 });
 
-test("the local Mac preview shows ProfileBar without offering a permission prompt", async () => {
+test("the local Mac preview shows the Mac shortcut without extension APIs", async () => {
   const elements = {
     "#status": { dataset: {}, textContent: "" },
     "#shortcut-heading": { textContent: "" },
@@ -477,10 +353,7 @@ test("the local Mac preview shows ProfileBar without offering a permission promp
     "#fallback": { hidden: true },
     "#shortcut-keys": { setAttribute() {} },
     "#shortcut-modifier": { textContent: "" },
-    ".profilebar": { hidden: true },
     "#open-shortcuts": { addEventListener() {} },
-    "#enable-profilebar": { addEventListener() {}, disabled: false },
-    "#profilebar-status": { textContent: "" },
   };
   runScript("welcome.js", {
     navigator: { platform: "MacIntel" },
@@ -489,7 +362,6 @@ test("the local Mac preview shows ProfileBar without offering a permission promp
   });
   await new Promise(setImmediate);
 
-  assert.equal(elements[".profilebar"].hidden, false);
-  assert.equal(elements["#enable-profilebar"].disabled, true);
-  assert.match(elements["#profilebar-status"].textContent, /installed extension/);
+  assert.equal(elements["#shortcut-modifier"].textContent, "⌘");
+  assert.match(elements["#status"].textContent, /installed extension/);
 });

@@ -11,11 +11,9 @@ cd "$root"
 zip -q -FS "$archive" \
   LICENSE \
   background.js \
-  profile-menu.js \
-  group-receiver.html \
-  group-receiver.js \
-  integration-status.html \
-  integration-status.js \
+  copy-error.html \
+  copy-error.js \
+  group-menu.js \
   icons/icon-16.png \
   icons/icon-32.png \
   icons/icon-48.png \

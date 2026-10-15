@@ -6,9 +6,9 @@ This is a Manifest V3 extension with no dependency install or compilation.
 
 - Read [README.md](README.md) for installation, automated tests, and packaging.
 - Follow [docs/testing.md](docs/testing.md) for validation before a release or
-  a change to copying, shortcuts, setup, the toast, or profile moves.
-- Keep ProfileBar integration optional. A failed or unavailable native handoff
-  must leave the source tab open, and the copy shortcut must still work.
+  a change to copying, shortcuts, setup, the toast, or the group menu.
+- Keep this extension copy-only. Moving tabs between Chrome profiles belongs in
+  ProfileBar for Chrome, which lives in the ProfileBar repository.
 - Use [STORE_LISTING.md](STORE_LISTING.md) for the Web Store listing and
   submission notes. Keep claims there aligned with the code and
   [PRIVACY.md](PRIVACY.md).

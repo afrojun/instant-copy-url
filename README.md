@@ -5,31 +5,12 @@ URLs, when you press `Command+Shift+C` on macOS or `Ctrl+Shift+C` elsewhere.
 Multiple URLs are copied in tab order, one per line. A small in-page toast
 confirms the copy.
 
-With [ProfileBar](https://github.com/afrojun/profilebar) installed on macOS,
-right-click a page and choose **Move tab to profile**, or right-click a tab and
-choose **Copy or move tabs**, to open its URL in another Chrome profile. The
-original tab closes after ProfileBar reports success. Enable ProfileBar access
-on the setup page or from either menu; Chrome then asks for the optional native
-messaging permission. The copy shortcut works without ProfileBar or that
-permission.
+In Chrome 150 and later, right-click a tab inside a group and choose
+**Copy group URLs** to copy every URL in that group, in tab order. If something
+goes wrong, a short help page explains what happened.
 
-When ProfileBar can identify the focused Chrome profile, the menus hide it from
-the destinations. If the focused profile cannot be verified, all profiles stay
-visible.
-
-Select several tabs and right-click one of them, then choose **Copy or move tabs**
-and **Move tab to [profile]** to move their URLs together. From a tab inside a
-group, the same submenu offers **Copy group URLs** and **Move group to [profile]**.
-When the destination profile has version 1.8.0 or newer with ProfileBar access
-enabled, it recreates the group's title, colour,
-and collapsed state. Otherwise, ProfileBar opens the URLs without a group.
-
-The setup page can request optional ProfileBar access on macOS. You can also
-enable it from the right-click menu. The setup and
-error pages link to the [tab-move guide](https://afrojun.dev/instant-copy-url/#move-tabs),
-[ProfileBar setup](https://afrojun.dev/profilebar/#move-tabs), and
-[help & feedback](https://github.com/afrojun/instant-copy-url/issues/new/choose).
-When ProfileBar is missing, the right-click menu opens the setup guide.
+Moving tabs between Chrome profiles on a Mac is available in
+[ProfileBar for Chrome](https://afrojun.dev/profilebar/).
 
 ## Privacy
 
@@ -39,24 +20,11 @@ The extension has:
 - No network access from the extension.
 - No storage or analytics.
 - Permission to read tab URLs. The extension reads highlighted tabs for the
-  copy shortcut, and the clicked, highlighted, or grouped tabs for an explicit
-  right-click action.
+  copy shortcut, and the clicked tab's group for **Copy group URLs**.
 - No access to previously visited pages.
 
-When you choose a profile, the extension sends the selected URLs and profile
-directory to ProfileBar through Chrome's local native messaging channel. For a
-group move, it also sends the group title, colour, and collapsed state.
-ProfileBar passes them to Chrome to open the pages, using a temporary local
-handoff when the destination can recreate a group. Neither component stores
-the URLs. Chrome 150 and later show the menu on tabs as well as pages; older
-supported versions show it on pages.
-
-This moves URLs, not browsing history, form contents, scroll position, or pinned
-state. Group moves recreate the visible group details when both profiles have
-the integration; they do not transfer saved group identity. If ProfileBar
-cannot open the URLs, the original tabs stay open. If any selected tab changes
-during the handoff, the extension leaves all of them open and explains what
-happened.
+URLs stay on your device. The extension copies them to the clipboard and
+nothing else.
 
 ## Install
 
@@ -77,15 +45,11 @@ extension ID stable across rebuilds. After rebuilding, select **Reload** for
 Instant Copy URL Dev in `chrome://extensions` to pick up new code and icons.
 The dev copy does not claim the production copy shortcut; assign a separate
 shortcut under `chrome://extensions/shortcuts` if you want to test copying.
-The optional ProfileBar connection uses a separate development native host.
-Give the dev extension ID shown by Chrome to `PROFILEBAR_DEV_EXTENSION_ID`
-when launching ProfileBar Dev.
 
 The published extension suggests its copy shortcut automatically. If Chrome
 does not assign it, open the setup page that appears after installation and
 follow its instructions. You can reopen that page later from the extension's
-**Details** page by selecting **Extension options**. The same setup page
-introduces the optional ProfileBar integration on macOS.
+**Details** page by selecting **Extension options**.
 
 ## Test
 
@@ -121,15 +85,12 @@ Before the first tagged release, complete the one-time setup in
 
 - `activeTab`: get temporary access to the current page after the keyboard
   command to show the confirmation toast.
-- `tabs`: read the URLs of highlighted tabs for copying or moving them. This
-  core permission is requested when the extension is installed or updated.
-- `tabGroups`: read group details for an explicit group move and recreate them
-  in a destination profile that has the extension installed.
+- `tabs`: read the URLs of highlighted tabs, or of the clicked tab's group,
+  for copying. This core permission is requested when the extension is
+  installed or updated.
 - `clipboardWrite`: place the selected URLs on the clipboard.
 - `offscreen`: host the minimal document required for clipboard access from a
   Manifest V3 background service worker.
 - `scripting`: show the local confirmation toast on the active page after a
   successful copy.
-- `contextMenus`: add the right-click copy and profile menus.
-- Optional `nativeMessaging`: send a selected page URL and profile directory
-  to ProfileBar on this Mac. Chrome asks only if you enable the integration.
+- `contextMenus`: add the **Copy group URLs** item to the tab menu.

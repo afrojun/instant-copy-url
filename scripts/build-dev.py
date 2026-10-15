@@ -2,6 +2,7 @@
 """Build a stable, separately named unpacked extension for local testing."""
 
 import json
+import shutil
 import subprocess
 from pathlib import Path
 from zipfile import ZipFile
@@ -13,7 +14,9 @@ archive = root / "dist" / f"instant-copy-url-{source_manifest['version']}.zip"
 dev_directory = root / "dist" / "instant-copy-url-dev"
 
 subprocess.run([root / "scripts" / "package.sh"], check=True, capture_output=True)
-dev_directory.mkdir(parents=True, exist_ok=True)
+# Rebuild from scratch so files dropped from the package do not linger.
+shutil.rmtree(dev_directory, ignore_errors=True)
+dev_directory.mkdir(parents=True)
 with ZipFile(archive) as package:
     package.extractall(dev_directory)
 
