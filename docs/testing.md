@@ -13,10 +13,12 @@ node --check background.js
 node --check offscreen.js
 node --check toast.js
 node --check welcome.js
+node --check group-menu.js
+node --check copy-error.js
 ```
 
-The Node tests cover the manifest, copy flow, offscreen clipboard write, setup
-page, and profile-move handoff, including failure and source-tab behavior. They
+The Node tests cover the manifest, copy flow, toast, offscreen clipboard write,
+setup page, and the **Copy group URLs** menu, including its error paths. They
 do not run the extension inside Chrome.
 
 ## Live Chrome check
@@ -31,11 +33,9 @@ full flow:
    Chrome may also leave the published copy's suggestion unassigned. Check that
    an assigned shortcut shows its key combination and hides the manual steps, while
    an unassigned shortcut shows the steps and shortcut settings button. Check that
-   macOS shows Command+Shift+C and the ProfileBar section; Windows/Linux show
-   Ctrl+Shift+C and hide that section. On macOS, check that the profile-move
-   example shows the divider and stays readable in a narrow window. Check that
-   the shortcut keys press in sequence, and that reduced-motion mode keeps
-   both the keys and profile-move example still.
+   macOS shows Command+Shift+C and Windows/Linux show Ctrl+Shift+C. Check that
+   the page stays readable in a narrow window, that the shortcut keys press in
+   sequence, and that reduced-motion mode keeps the keys still.
 2. If needed, use the setup page's button to open
    `chrome://extensions/shortcuts` and assign the command. On macOS, try
    Command+Shift+C; on Windows and Linux, try Ctrl+Shift+C. If Chrome reserves
@@ -51,21 +51,13 @@ full flow:
    Confirm the toast says **2 URLs copied**.
 6. Repeat on a protected page such as `chrome://extensions`. The URL should
    still copy, but Chrome does not allow the on-page toast there.
-7. On macOS with ProfileBar Dev installed, click **Enable ProfileBar access**
-   on the setup page. Confirm Chrome requests the native messaging permission
-   only then and the page reports access enabled. Confirm the profile menu
-   updates without using **Refresh profiles**. Select another profile from an
-   HTTP page and confirm the destination opens before the source tab closes.
-   Revoking permission should return the menu to its enable action.
-8. With the development native host unavailable, try again. Confirm the
-   original tab stays open and the extension offers setup guidance. Repeat the
-   copy shortcut to confirm it still works without ProfileBar.
-9. If the source tab navigates during the handoff, confirm it stays open and
-   the extension explains that the destination also opened.
-10. Select two HTTP tabs in the same Chrome window, right-click one selected
-    tab, and choose a destination. Both pages should open in tab-strip order,
-    and both originals should close. Repeat with a selected `chrome://` tab;
-    neither page should move.
+7. In Chrome 150 or later, right-click a tab inside a group. The tab menu
+   should have one **Copy group URLs** item. Choose it and confirm the
+   clipboard contains every group URL in tab order, even if only one tab was
+   highlighted, and the toast reports the number copied.
+8. Right-click a tab that is not in a group and choose **Copy group URLs**.
+   Confirm nothing is copied and a help page explains that the tab is not in a
+   group.
 
 Check keyboard focus and reduced-motion behavior when changing the setup page
 or toast. A successful Node test run alone does not establish that Chrome

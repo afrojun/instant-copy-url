@@ -6,9 +6,6 @@ const fallback = document.querySelector("#fallback");
 const openShortcuts = document.querySelector("#open-shortcuts");
 const shortcutKeys = document.querySelector("#shortcut-keys");
 const shortcutModifier = document.querySelector("#shortcut-modifier");
-const profileBarSection = document.querySelector(".profilebar");
-const profileBarButton = document.querySelector("#enable-profilebar");
-const profileBarStatus = document.querySelector("#profilebar-status");
 const previewPlatform = globalThis.navigator?.userAgentData?.platform
   ?? globalThis.navigator?.platform;
 const platformInfo = globalThis.chrome?.runtime?.getPlatformInfo?.() ?? Promise.resolve({
@@ -24,56 +21,14 @@ openShortcuts.addEventListener("click", async () => {
   }
 });
 
-profileBarButton.addEventListener("click", () => {
-  profileBarButton.disabled = true;
-  void chrome.permissions.request({ permissions: ["nativeMessaging"] })
-    .then((granted) => {
-      if (granted) return showProfileBarStatus();
-      profileBarButton.disabled = false;
-      profileBarStatus.textContent = "Access was not enabled. You can try again.";
-    })
-    .catch((error) => {
-      console.error("Could not enable ProfileBar access:", error);
-      profileBarButton.disabled = false;
-      profileBarStatus.textContent = "Chrome could not request access. Try the Move tab to profile menu.";
-    });
-});
-
-window.addEventListener("focus", () => Promise.all([
-  showShortcutStatus(),
-  showProfileBarStatus(),
-]));
+window.addEventListener("focus", showShortcutStatus);
 void showShortcutStatus();
-void showProfileBarStatus();
 void showPlatform();
 
 async function showPlatform() {
   const { os } = await platformInfo;
   shortcutModifier.textContent = os === "mac" ? "⌘" : "Ctrl";
   shortcutKeys.setAttribute("aria-label", os === "mac" ? "Command Shift C" : "Control Shift C");
-  profileBarSection.hidden = os !== "mac";
-}
-
-async function showProfileBarStatus() {
-  if (!globalThis.chrome?.permissions?.contains) {
-    profileBarButton.disabled = true;
-    profileBarStatus.textContent = "Open this page from the installed extension to enable access.";
-    return;
-  }
-
-  const { os } = await platformInfo;
-  if (os !== "mac") {
-    profileBarButton.hidden = true;
-    profileBarStatus.textContent = "ProfileBar is available on macOS.";
-    return;
-  }
-
-  const enabled = await chrome.permissions.contains({ permissions: ["nativeMessaging"] });
-  profileBarButton.hidden = enabled;
-  profileBarButton.disabled = false;
-  profileBarStatus.textContent = enabled
-    ? "Access enabled. Choose Move tab to profile from a page or tab menu."
-    : "Access is optional. Chrome will ask when you enable it.";
 }
 
 async function showShortcutStatus() {
