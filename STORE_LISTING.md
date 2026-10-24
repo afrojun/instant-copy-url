@@ -4,7 +4,7 @@
 
 **Name:** Instant Copy URL
 
-**Summary:** Copy tab URLs instantly. One shortcut copies the current or selected tabs, and a right-click copies a tab group.
+**Summary:** Copy tab URLs instantly. One shortcut or a right-click copies the current or selected tabs, or a whole tab group.
 
 **Category:** Make Chrome yours › Functionality and UI
 
@@ -15,8 +15,9 @@
 Copy one link or a whole selection of tabs with one shortcut. Instant Copy URL
 puts their URLs on your clipboard in tab order, one per line, and confirms the
 copy. Paste them into a message, document, or note without selecting the
-address bar. In Chrome 150 and later, right-click a tab inside a group to copy
-every URL in that group.
+address bar. In Chrome 150 and later, right-click a tab to copy the selected
+tabs, or a whole tab group. A group copies with its name and each page's title,
+so it pastes as linked titles in documents, chat, and email.
 
 Copying works on Mac, Windows, and Linux. Chrome may assign Command+Shift+C on
 Mac or Ctrl+Shift+C on Windows and Linux. If it does not, the setup page helps
@@ -46,21 +47,29 @@ chosen tab group, to the clipboard.
 
 - `activeTab`: Give temporary access to the current page when the user invokes
   the shortcut, so the extension can show the confirmation.
-- `tabs`: Read the highlighted tabs' URLs in the current window for the copy
-  shortcut, or the URLs of the clicked tab's group when the user chooses
-  **Copy group URLs**. The extension does not scan tabs in the background.
+- `tabs`: Read the highlighted tabs' URLs when the user invokes the copy
+  shortcut or chooses **Copy tab URLs**, or the titles and URLs of the clicked
+  tab's group when the user chooses **Copy group URLs**. Check whether the
+  focused window has a group, without reading URLs, to show **Copy group URLs**
+  only when it applies. The extension does not collect tab data in the
+  background.
+- `tabGroups`: Read the name of the group the user copies, and watch for groups
+  being created or removed so **Copy group URLs** appears only when the window
+  has a group.
 - `clipboardWrite`: Write the selected URLs to the user's clipboard.
 - `offscreen`: Provide the local document required to access the clipboard from
   a Manifest V3 extension service worker.
 - `scripting`: Insert the local confirmation message into the active page after
   the URL has been copied.
-- `contextMenus`: Show the **Copy group URLs** item in the tab right-click menu.
+- `contextMenus`: Show the **Copy tab URLs** and **Copy group URLs** items in
+  the tab right-click menu.
 
 **Remote code:** No. All executable code is included in the extension package.
 
 **Data handling:** The extension handles selected tab URLs, which are web
 browsing activity. It processes URLs locally after the user invokes the copy
-shortcut or chooses **Copy group URLs**, and only writes them to the clipboard.
+shortcut or chooses a copy item from the tab menu, and only writes them to the
+clipboard.
 It does not retain them or collect other user data.
 
 Certify the limited-use declarations in the Dashboard. Check the Dashboard's
@@ -86,9 +95,11 @@ categories.
 6. Highlight multiple tabs in one window and invoke the shortcut. Confirm the
    clipboard contains their URLs in tab order, one per line, and the toast
    reports the number copied.
-7. In Chrome 150 or later, right-click a tab inside a group and choose
-   **Copy group URLs**. Confirm all group URLs copy in tab order and the toast
-   reports the number copied.
+7. In Chrome 150 or later, select several tabs, right-click one, and choose
+   **Copy tab URLs**. Confirm their URLs copy in tab order.
+8. Right-click a tab inside a group and choose **Copy group URLs**. Confirm
+   the group name and each page's title and URL copy in tab order, and the
+   toast reports the number copied.
 
 Chrome does not allow scripts on protected pages such as `chrome://` pages. The
 URL is still copied there, but the confirmation message cannot be shown.

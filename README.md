@@ -5,9 +5,12 @@ URLs, when you press `Command+Shift+C` on macOS or `Ctrl+Shift+C` elsewhere.
 Multiple URLs are copied in tab order, one per line. A small in-page toast
 confirms the copy.
 
-In Chrome 150 and later, right-click a tab inside a group and choose
-**Copy group URLs** to copy every URL in that group, in tab order. If something
-goes wrong, a short help page explains what happened.
+In Chrome 150 and later, right-click a tab and choose **Copy tab URLs** to copy
+the selected tabs, or **Copy group URLs** to copy its whole group in tab order.
+A group copies with its name and each page's title: apps that accept rich text
+get linked titles, and plain-text apps get each title above its URL.
+**Copy group URLs** appears while the focused window has a tab group. If
+something goes wrong, a short help page explains what happened.
 
 Moving tabs between Chrome profiles on a Mac is available in
 [ProfileBar for Chrome](https://afrojun.dev/profilebar/).
@@ -20,7 +23,8 @@ The extension has:
 - No network access from the extension.
 - No storage or analytics.
 - Permission to read tab URLs. The extension reads highlighted tabs for the
-  copy shortcut, and the clicked tab's group for **Copy group URLs**.
+  copy shortcut and **Copy tab URLs**, and the clicked tab's group for
+  **Copy group URLs**.
 - No access to previously visited pages.
 
 URLs stay on your device. The extension copies them to the clipboard and
@@ -85,12 +89,15 @@ Before the first tagged release, complete the one-time setup in
 
 - `activeTab`: get temporary access to the current page after the keyboard
   command to show the confirmation toast.
-- `tabs`: read the URLs of highlighted tabs, or of the clicked tab's group,
-  for copying. This core permission is requested when the extension is
-  installed or updated.
+- `tabs`: read the URLs of highlighted tabs, or the titles and URLs of the
+  clicked tab's group, for copying. This core permission is requested when the
+  extension is installed or updated.
+- `tabGroups`: read the copied group's name, and notice groups being created or
+  removed to show **Copy group URLs** only when the window has one.
 - `clipboardWrite`: place the selected URLs on the clipboard.
 - `offscreen`: host the minimal document required for clipboard access from a
   Manifest V3 background service worker.
 - `scripting`: show the local confirmation toast on the active page after a
   successful copy.
-- `contextMenus`: add the **Copy group URLs** item to the tab menu.
+- `contextMenus`: add the **Copy tab URLs** and **Copy group URLs** items to
+  the tab menu.

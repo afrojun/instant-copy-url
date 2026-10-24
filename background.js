@@ -37,12 +37,18 @@ chrome.commands.onCommand.addListener(async (command) => {
 let creatingOffscreen;
 
 async function copyUrls(urls) {
+  await copyToClipboard(urls.join("\n"));
+}
+
+// Apps that paste rich text use the HTML; everything else gets the plain text.
+async function copyToClipboard(text, html) {
   await ensureOffscreenDocument();
 
   const result = await chrome.runtime.sendMessage({
     target: "offscreen",
     type: "copy-text",
-    text: urls.join("\n"),
+    text,
+    html,
   });
 
   if (!result?.ok) {
@@ -89,7 +95,7 @@ async function showToast(tabId, count) {
 }
 
 try {
-  importScripts("group-menu.js");
+  importScripts("tab-menu.js");
 } catch (error) {
-  console.error("Could not load the group menu:", error);
+  console.error("Could not load the tab menu:", error);
 }

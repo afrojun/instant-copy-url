@@ -20,7 +20,7 @@ test("manifest requests only the copy permissions", () => {
   assert.equal(manifest.name, "Instant Copy URL");
   assert.equal(
     manifest.description,
-    "Copy tab URLs instantly. One shortcut copies the current or selected tabs, and a right-click copies a tab group.",
+    "Copy tab URLs instantly. One shortcut or a right-click copies the current or selected tabs, or a whole tab group.",
   );
   assert.deepEqual(manifest.icons, {
     16: "icons/icon-16.png",
@@ -31,6 +31,7 @@ test("manifest requests only the copy permissions", () => {
   assert.deepEqual(manifest.permissions, [
     "activeTab",
     "tabs",
+    "tabGroups",
     "clipboardWrite",
     "offscreen",
     "scripting",
@@ -246,6 +247,43 @@ test("the offscreen document writes received text to the clipboard", () => {
   assert.equal(copied, true);
   assert.equal(response.ok, true);
   assert.equal(textarea.value, "");
+});
+
+test("the offscreen document writes rich text with a plain-text fallback", () => {
+  let messageListener;
+  let copyListener;
+  const written = {};
+  let prevented = false;
+  let response;
+  const document = {
+    querySelector() {
+      return { value: "", select() {} };
+    },
+    addEventListener(type, listener, options) {
+      assert.equal(type, "copy");
+      assert.equal(options.once, true);
+      copyListener = listener;
+    },
+    execCommand() {
+      copyListener({
+        clipboardData: { setData(type, value) { written[type] = value; } },
+        preventDefault() { prevented = true; },
+      });
+      return true;
+    },
+  };
+  const chrome = { runtime: { onMessage: { addListener(listener) { messageListener = listener; } } } };
+  runScript("offscreen.js", { chrome, document });
+
+  messageListener(
+    { target: "offscreen", type: "copy-text", text: "Title\nhttps://example.com", html: "<a>Title</a>" },
+    {},
+    (value) => { response = value; },
+  );
+
+  assert.deepEqual(written, { "text/plain": "Title\nhttps://example.com", "text/html": "<a>Title</a>" });
+  assert.equal(prevented, true);
+  assert.equal(response.ok, true);
 });
 
 test("the setup page reports shortcut state and opens Chrome settings", async () => {
