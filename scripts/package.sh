@@ -13,7 +13,6 @@ zip -q -FS "$archive" \
   background.js \
   copy-error.html \
   copy-error.js \
-  group-menu.js \
   icons/icon-16.png \
   icons/icon-32.png \
   icons/icon-48.png \
@@ -21,6 +20,7 @@ zip -q -FS "$archive" \
   manifest.json \
   offscreen.html \
   offscreen.js \
+  tab-menu.js \
   toast.js \
   welcome.css \
   welcome.html \
