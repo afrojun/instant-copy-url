@@ -2,6 +2,8 @@ const COPY_TABS_MENU = "copy-tab-urls";
 const COPY_GROUP_MENU = "copy-group-urls";
 const NO_GROUP = -1;
 
+let menuUpdate = Promise.resolve();
+
 chrome.runtime.onInstalled.addListener(createTabMenu);
 chrome.runtime.onStartup.addListener(createTabMenu);
 // Chrome does not say which tab was right-clicked before it shows the menu, so the group item
@@ -30,41 +32,53 @@ function hasTabMenu() {
   return Boolean(chrome.contextMenus.ContextType?.TAB);
 }
 
-async function createTabMenu() {
-  if (!hasTabMenu()) {
-    return;
-  }
-
-  const groupVisible = await focusedWindowHasGroup();
-  chrome.contextMenus.removeAll(() => {
-    createMenuItem({ id: COPY_TABS_MENU, title: "Copy tab URLs", contexts: ["tab"] });
-    createMenuItem({ id: COPY_GROUP_MENU, title: "Copy group URLs", contexts: ["tab"], visible: groupVisible });
+function createTabMenu() {
+  return queueMenuUpdate(async () => {
+    await menuCall((done) => chrome.contextMenus.removeAll(done));
+    await menuCall((done) => chrome.contextMenus.create(
+      { id: COPY_TABS_MENU, title: "Copy tab URLs", contexts: ["tab"] }, done,
+    ));
+    const visible = await focusedWindowHasGroup();
+    await menuCall((done) => chrome.contextMenus.create(
+      { id: COPY_GROUP_MENU, title: "Copy group URLs", contexts: ["tab"], visible }, done,
+    ));
   });
 }
 
-function createMenuItem(properties) {
-  chrome.contextMenus.create(properties, () => {
-    if (chrome.runtime.lastError) {
-      console.error("Could not create the tab menu:", chrome.runtime.lastError.message);
-    }
+function updateGroupMenu() {
+  return queueMenuUpdate(async () => {
+    const visible = await focusedWindowHasGroup();
+    // The item does not exist yet if Chrome has not finished starting the extension.
+    await menuCall((done) => chrome.contextMenus.update(COPY_GROUP_MENU, { visible }, done)).catch(() => {});
   });
 }
 
-async function updateGroupMenu() {
+// Menu changes run one at a time, so a visibility check always applies after the menu it updates.
+function queueMenuUpdate(update) {
   if (!hasTabMenu()) {
-    return;
+    return menuUpdate;
   }
+  menuUpdate = menuUpdate.then(update).catch((error) => {
+    console.error("Could not update the tab menu:", error);
+  });
+  return menuUpdate;
+}
 
-  const visible = await focusedWindowHasGroup();
-  chrome.contextMenus.update(COPY_GROUP_MENU, { visible }, () => {
-    // The item does not exist yet if a tab event arrives before the menu is created.
-    void chrome.runtime.lastError;
+function menuCall(call) {
+  return new Promise((resolve, reject) => {
+    call(() => {
+      if (chrome.runtime.lastError) {
+        reject(new Error(chrome.runtime.lastError.message));
+      } else {
+        resolve();
+      }
+    });
   });
 }
 
 async function focusedWindowHasGroup() {
-  const tabs = await chrome.tabs.query({ lastFocusedWindow: true });
-  return tabs.some(({ groupId }) => Number.isInteger(groupId) && groupId !== NO_GROUP);
+  const groups = await chrome.tabGroups.query({ windowId: chrome.windows.WINDOW_ID_CURRENT });
+  return groups.length > 0;
 }
 
 async function copySelectedTabUrls(clickedTab) {

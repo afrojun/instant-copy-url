@@ -264,6 +264,7 @@ test("the offscreen document writes rich text with a plain-text fallback", () =>
       assert.equal(options.once, true);
       copyListener = listener;
     },
+    removeEventListener() {},
     execCommand() {
       copyListener({
         clipboardData: { setData(type, value) { written[type] = value; } },
@@ -284,6 +285,36 @@ test("the offscreen document writes rich text with a plain-text fallback", () =>
   assert.deepEqual(written, { "text/plain": "Title\nhttps://example.com", "text/html": "<a>Title</a>" });
   assert.equal(prevented, true);
   assert.equal(response.ok, true);
+});
+
+test("a rejected rich copy leaves no listener to overwrite the next copy", () => {
+  let messageListener;
+  const copyListeners = new Set();
+  let copyResult = false;
+  const document = {
+    querySelector() {
+      return { value: "", select() {} };
+    },
+    addEventListener(type, listener) { copyListeners.add(listener); },
+    removeEventListener(type, listener) { copyListeners.delete(listener); },
+    execCommand() { return copyResult; },
+  };
+  const chrome = { runtime: { onMessage: { addListener(listener) { messageListener = listener; } } } };
+  runScript("offscreen.js", { chrome, document });
+
+  let response;
+  messageListener(
+    { target: "offscreen", type: "copy-text", text: "Group", html: "<p>Group</p>" },
+    {},
+    (value) => { response = value; },
+  );
+  assert.equal(response.ok, false);
+  assert.equal(copyListeners.size, 0);
+
+  copyResult = true;
+  messageListener({ target: "offscreen", type: "copy-text", text: "https://example.com" }, {}, (value) => { response = value; });
+  assert.equal(response.ok, true);
+  assert.equal(copyListeners.size, 0);
 });
 
 test("the setup page reports shortcut state and opens Chrome settings", async () => {

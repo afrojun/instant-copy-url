@@ -49,13 +49,11 @@ chosen tab group, to the clipboard.
   the shortcut, so the extension can show the confirmation.
 - `tabs`: Read the highlighted tabs' URLs when the user invokes the copy
   shortcut or chooses **Copy tab URLs**, or the titles and URLs of the clicked
-  tab's group when the user chooses **Copy group URLs**. Check whether the
-  focused window has a group, without reading URLs, to show **Copy group URLs**
-  only when it applies. The extension does not collect tab data in the
-  background.
-- `tabGroups`: Read the name of the group the user copies, and watch for groups
-  being created or removed so **Copy group URLs** appears only when the window
-  has a group.
+  tab's group when the user chooses **Copy group URLs**. The extension does not
+  read tabs in the background.
+- `tabGroups`: Read the name of the group the user copies. Check whether the
+  focused window has a tab group, which reads no URLs, and watch for groups
+  being created or removed, so **Copy group URLs** appears only when it applies.
 - `clipboardWrite`: Write the selected URLs to the user's clipboard.
 - `offscreen`: Provide the local document required to access the clipboard from
   a Manifest V3 extension service worker.
@@ -66,11 +64,11 @@ chosen tab group, to the clipboard.
 
 **Remote code:** No. All executable code is included in the extension package.
 
-**Data handling:** The extension handles selected tab URLs, which are web
-browsing activity. It processes URLs locally after the user invokes the copy
-shortcut or chooses a copy item from the tab menu, and only writes them to the
-clipboard.
-It does not retain them or collect other user data.
+**Data handling:** The extension handles selected tab URLs, page titles, and
+tab group names, which are web browsing activity. It processes them locally
+after the user invokes the copy shortcut or chooses a copy item from the tab
+menu, and only writes them to the clipboard. It does not retain them or collect
+other user data.
 
 Certify the limited-use declarations in the Dashboard. Check the Dashboard's
 current wording before submission because Google may change the available data

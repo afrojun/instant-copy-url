@@ -1,6 +1,6 @@
 # Privacy Policy
 
-Effective date: 24 October 2026
+Effective date: 25 October 2026
 
 Chrome grants Instant Copy URL access to open tabs' URLs when the extension is
 installed or updated. The extension reads the highlighted tabs in the current
@@ -12,7 +12,8 @@ and copies them. To show **Copy group URLs** only when it applies, the
 extension checks whether the focused window has a tab group, without reading
 any URLs. It does not collect tab data in the background.
 
-The extension does not store the URLs or send them anywhere. It makes no
+The extension does not store the URLs, titles, or group names, or send them
+anywhere. It makes no
 network requests and has no analytics, advertising, tracking, accounts, or
 remote code.
 
@@ -24,10 +25,9 @@ Store User Data Policy, including the Limited Use requirements.
 - `activeTab` gives temporary access to the current page after you invoke the
   shortcut so the extension can show the confirmation.
 - `tabs` lets the extension read URLs of highlighted tabs, or the titles and
-  URLs of the clicked tab's group, for copying, and check whether the focused
-  window has a group.
-- `tabGroups` reads the name of the group you copy, and notices when groups
-  are created or removed so the menu can show **Copy group URLs**.
+  URLs of the clicked tab's group, for copying.
+- `tabGroups` reads the name of the group you copy, and checks whether the
+  focused window has a group so the menu can show **Copy group URLs**.
 - `clipboardWrite` copies the selected URLs to your clipboard.
 - `offscreen` provides the local document Chrome requires for clipboard access
   from an extension service worker.

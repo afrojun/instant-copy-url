@@ -6,7 +6,7 @@ const vm = require("node:vm");
 
 const source = fs.readFileSync(path.join(__dirname, "..", "tab-menu.js"), "utf8");
 
-function menuHarness({ tabContext = true, tabs = [], groups = {} } = {}) {
+function menuHarness({ tabContext = true, tabs = [], groups = {}, windowGroups = [], asyncMenus = false } = {}) {
   const menuUpdates = [];
   const richCopies = [];
   const listeners = {};
@@ -14,6 +14,16 @@ function menuHarness({ tabContext = true, tabs = [], groups = {} } = {}) {
   const openedTabs = [];
   const copied = [];
   const toasts = [];
+  // Chrome reports menu errors through runtime.lastError while the callback runs.
+  function finish(callback, error) {
+    const run = () => {
+      chrome.runtime.lastError = error ? { message: error } : undefined;
+      callback();
+      chrome.runtime.lastError = undefined;
+    };
+    if (asyncMenus) setImmediate(run);
+    else run();
+  }
   const chrome = {
     runtime: {
       onInstalled: { addListener(listener) { listeners.installed = listener; } },
@@ -23,17 +33,29 @@ function menuHarness({ tabContext = true, tabs = [], groups = {} } = {}) {
     contextMenus: {
       ContextType: tabContext ? { TAB: "tab" } : {},
       onClicked: { addListener(listener) { listeners.clicked = listener; } },
-      removeAll(callback) { menus.length = 0; callback(); },
-      create(item, callback) { menus.push(item); callback(); },
-      update(id, properties, callback) { menuUpdates.push({ id, ...properties }); callback(); },
+      removeAll(callback) { menus.length = 0; finish(callback); },
+      create(item, callback) { menus.push({ ...item }); finish(callback); },
+      update(id, properties, callback) {
+        const item = menus.find((menu) => menu.id === id);
+        if (item) {
+          Object.assign(item, properties);
+          menuUpdates.push({ id, ...properties });
+        }
+        finish(callback, item ? undefined : `Cannot find menu item with id ${id}`);
+      },
     },
     windows: {
+      WINDOW_ID_CURRENT: -2,
       onFocusChanged: { addListener(listener) { listeners.focusChanged = listener; } },
     },
     tabGroups: {
       onCreated: { addListener(listener) { listeners.groupCreated = listener; } },
       onRemoved: { addListener(listener) { listeners.groupRemoved = listener; } },
       async get(id) { return groups[id]; },
+      async query({ windowId }) {
+        assert.equal(windowId, -2, "group visibility should follow the current window");
+        return [...windowGroups];
+      },
     },
     tabs: {
       onAttached: { addListener(listener) { listeners.attached = listener; } },
@@ -46,14 +68,17 @@ function menuHarness({ tabContext = true, tabs = [], groups = {} } = {}) {
       },
     },
   };
-  vm.runInNewContext(source, {
+  const context = vm.createContext({
     chrome,
     copyUrls: async (urls) => copied.push([...urls]),
     copyToClipboard: async (text, html) => richCopies.push({ text, html }),
     showToast: async (id, count) => toasts.push({ id, count }),
     console: { error() {} },
   });
-  return { listeners, menus, menuUpdates, openedTabs, copied, richCopies, toasts };
+  vm.runInContext(source, context);
+  return {
+    settle: () => vm.runInContext("menuUpdate", context),
+    listeners, menus, menuUpdates, openedTabs, copied, richCopies, toasts, windowGroups };
 }
 
 async function click(harness, tab, menuItemId = "copy-group-urls") {
@@ -62,7 +87,7 @@ async function click(harness, tab, menuItemId = "copy-group-urls") {
 }
 
 test("the tab menu copies tabs, and offers the group only while the window has a group", async () => {
-  const harness = menuHarness({ tabs: [{ id: 1, groupId: -1, active: true }] });
+  const harness = menuHarness();
   await harness.listeners.installed({ reason: "install" });
   await harness.listeners.startup();
 
@@ -73,14 +98,15 @@ test("the tab menu copies tabs, and offers the group only while the window has a
 });
 
 test("the group item follows whether the focused window has a group", async () => {
-  const tabs = [{ id: 1, groupId: -1, active: true }, { id: 2, groupId: 8 }];
-  const harness = menuHarness({ tabs });
+  const harness = menuHarness();
+  await harness.listeners.startup();
 
+  harness.windowGroups.push({ id: 8 });
   harness.listeners.groupCreated({ id: 8 });
-  await new Promise(setImmediate);
-  tabs[1].groupId = -1;
+  await harness.settle();
+  harness.windowGroups.length = 0;
   harness.listeners.groupRemoved({ id: 8 });
-  await new Promise(setImmediate);
+  await harness.settle();
 
   assert.deepEqual(harness.menuUpdates, [
     { id: "copy-group-urls", visible: true },
@@ -88,11 +114,32 @@ test("the group item follows whether the focused window has a group", async () =
   ]);
 });
 
+test("a group created while the menu is being built still shows the group item", async () => {
+  const harness = menuHarness({ asyncMenus: true });
+  void harness.listeners.startup();
+  await new Promise(setImmediate);
+  harness.windowGroups.push({ id: 8 });
+  harness.listeners.groupCreated({ id: 8 });
+  await harness.settle();
+
+  assert.equal(harness.menus.find(({ id }) => id === "copy-group-urls").visible, true);
+});
+
+test("a group event before the menu exists is ignored without an error", async () => {
+  const harness = menuHarness();
+  harness.windowGroups.push({ id: 8 });
+  harness.listeners.groupCreated({ id: 8 });
+  await harness.settle();
+
+  assert.equal(harness.menuUpdates.length, 0);
+  assert.equal(harness.menus.length, 0);
+});
+
 test("Chrome without tab menus gets no tab items", async () => {
   const harness = menuHarness({ tabContext: false });
   await harness.listeners.installed({ reason: "install" });
   harness.listeners.groupCreated({ id: 8 });
-  await new Promise(setImmediate);
+  await harness.settle();
 
   assert.equal(harness.menus.length, 0);
   assert.equal(harness.menuUpdates.length, 0);
